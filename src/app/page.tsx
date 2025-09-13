@@ -1,6 +1,6 @@
-import { CanvasBase } from '@/3D/CanvasBase';
-import { Environment } from '@/3D/Environment';
-import { Scene } from '@/3D/Scene';
+import { CanvasBase } from '@/3D/base/CanvasBase';
+import { Environment } from '@/3D/base/Environment';
+import { Scene } from '@/3D/base/Scene';
 import { Navbar } from '@/app/components/Navbar';
 
 export default function Home() {

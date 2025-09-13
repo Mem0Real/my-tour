@@ -1,8 +1,8 @@
 'use client';
 
-import { Cameras } from '@/3D/Cameras';
-import { Lights } from '@/3D/Lights';
-import { Grid, OrbitControls, Wireframe } from '@react-three/drei';
+import { Cameras } from '@/3D/base/Cameras';
+import { Lights } from '@/3D/base/Lights';
+import { OrbitControls, Wireframe } from '@react-three/drei';
 import { MOUSE } from 'three';
 
 export const Environment = () => {
@@ -10,15 +10,6 @@ export const Environment = () => {
     <>
       <Lights />
       <Cameras />
-      <Grid
-        renderOrder={-1}
-        position={[0, 0.01, 0]}
-        cellSize={1}
-        sectionSize={1}
-        sectionColor={'#D0D0CF'}
-        sectionThickness={1}
-        infiniteGrid={true}
-      />
 
       <OrbitControls
         enableRotate={false}
