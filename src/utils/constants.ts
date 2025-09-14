@@ -7,5 +7,5 @@ export enum CursorTypes {
   DEFAULT = 'auto',
   CROSS = 'crosshair',
   POINTER = 'pointer',
-  PENCIL = 'url("/pencil.svg") 4 28, auto',
+  PENCIL = 'url("/pencil.svg") 4 30, auto',
 }

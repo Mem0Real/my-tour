@@ -5,8 +5,8 @@ import { CursorTypes } from '@/utils/constants';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 
-import { drawingWallAtom, wallStartAtom, previewEndAtom, wallsAtom } from '@/utils/atoms/drawing';
-import * as THREE from 'three';
+import { isDrawingAtom, wallPointsAtom, previewPointAtom, wallsAtom } from '@/utils/atoms/drawing';
+
 import { Wall } from '@/3D/components/Wall';
 
 export const Board = () => {
@@ -15,10 +15,12 @@ export const Board = () => {
   const insert = useAtomValue(insertAtom);
   const setCursor = useSetAtom(cursorTypeAtom);
 
-  const [drawing, setDrawing] = useAtom(drawingWallAtom);
-  const [start, setStart] = useAtom(wallStartAtom);
-  const [previewEnd, setPreviewEnd] = useAtom(previewEndAtom);
+  const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
+  const [points, setPoints] = useAtom(wallPointsAtom);
   const [walls, setWalls] = useAtom(wallsAtom);
+  const [preview, setPreview] = useAtom(previewPointAtom);
+
+  const SNAP_DISTANCE = 0.5; // tolerance for snapping to first point
 
   useEffect(() => {
     if (insert === 'wall' && hovered) {
@@ -29,23 +31,33 @@ export const Board = () => {
   }, [insert, hovered]);
 
   const handleBoardClick = (e: any) => {
+    if (insert !== 'wall') return;
+
     const point = e.point.clone(); // 3D point on the board
 
-    if (!drawing) {
-      setStart(point);
-      setDrawing(true);
+    if (!isDrawing) {
+      setPoints([point]);
+      setIsDrawing(true);
     } else {
-      setWalls([...walls, [start!, point]]);
-      setStart(null);
-      setPreviewEnd(null);
-      setDrawing(false);
+      const first = points[0];
+      const last = points[points.length - 1];
+
+      // Check if click is near first point -> close loop
+      if (point.distanceTo(first) < SNAP_DISTANCE && points.length > 2) {
+        setWalls([...walls, ...points.map((p, i) => [p, points[(i + 1) % points.length]])]);
+        setPoints([]);
+        setPreview(null);
+        setIsDrawing(false);
+      } else {
+        // Add wall from last -> new point
+        setWalls([...walls, [last, point]]);
+        setPoints([...points, point]);
+      }
     }
   };
 
   const handleBoardMove = (e: any) => {
-    if (drawing && start) {
-      setPreviewEnd(e.point.clone());
-    }
+    if (isDrawing) setPreview(e.point.clone());
   };
 
   return (
@@ -62,11 +74,21 @@ export const Board = () => {
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
+      {/* Finalized walls */}
       {walls.map(([a, b], i) => (
         <Wall key={i} start={a} end={b} />
       ))}
 
-      {start && previewEnd && <Wall start={start} end={previewEnd} dashed />}
+      {/* Active chain */}
+      {points.map((p, i) => {
+        if (i === points.length - 1 && preview) {
+          return <Wall key={`preview-${i}`} start={p} end={preview} dashed />;
+        }
+        if (i < points.length - 1) {
+          return <Wall key={`active-${i}`} start={p} end={points[i + 1]} dashed />;
+        }
+        return null;
+      })}
     </>
   );
 };
