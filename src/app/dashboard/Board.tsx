@@ -3,15 +3,17 @@
 import * as THREE from 'three';
 import { insertAtom } from '@/utils/atoms/ui';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { isDrawingAtom, wallPointsAtom, previewPointAtom, wallsAtom } from '@/utils/atoms/drawing';
 
 import { Wall } from '@/3D/components/Wall';
 import { magneticSnap } from '@/3D/helpers/snapHelper';
+import { SnapIndicator } from '@/3D/components/SnapIndicator';
 
 export const Board = () => {
   const [hovered, setHovered] = useState(false);
+  const [cursorPos, setCursorPos] = useState(null);
 
   const insert = useAtomValue(insertAtom);
 
@@ -80,8 +82,11 @@ export const Board = () => {
   };
 
   const handleBoardMove = (e: any) => {
+    const worldPoint = e.point.clone();
+    setCursorPos(worldPoint);
+
     if (isDrawing) {
-      const point = magneticSnap(e.point, points[points.length - 1], points[0]);
+      const point = magneticSnap(worldPoint, points[points.length - 1], points[0]);
       setPreview(point);
     }
   };
@@ -109,7 +114,19 @@ export const Board = () => {
       {/* Active chain */}
       {points.map((p, i) => {
         if (i === points.length - 1 && preview) {
-          return <Wall key={`preview-${i}`} start={p} end={preview} dashed showLength />;
+          const snapped = preview.clone();
+          const isSnapped = points.length > 0 && preview.distanceTo(points[0]) < SNAP_DISTANCE;
+
+          return (
+            <React.Fragment key={`preview-${i}`}>
+              {/* Regular preview wall */}
+              <Wall start={p} end={preview} dashed showLength />
+
+              {/* If snapping is active, show SnapIndicator */}
+              {/* {isSnapped && <SnapIndicator start={p} end={snapped} />} */}
+              <SnapIndicator points={points} currentPos={cursorPos!} isDrawing={isDrawing} />
+            </React.Fragment>
+          );
         }
         if (i < points.length - 1) {
           return <Wall key={`active-${i}`} start={p} end={points[i + 1]} dashed showLength />;

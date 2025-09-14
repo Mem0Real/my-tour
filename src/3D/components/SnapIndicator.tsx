@@ -1,32 +1,66 @@
+import { Line } from '@react-three/drei';
 import * as THREE from 'three';
-import React, { FC, useMemo } from 'react';
+import React, { JSX } from 'react';
 
-interface Props {
-  start: THREE.Vector3;
-  end: THREE.Vector3;
-  active?: boolean;
+interface SnapIndicatorProps {
+  points: THREE.Vector3[];
+  currentPos?: THREE.Vector3;
+  isDrawing: boolean;
+  snapThreshold?: number;
 }
 
-export const SnapIndicator: FC<Props> = ({ start, end, active = true }) => {
-  if (!active) return null;
+export const SnapIndicator: React.FC<SnapIndicatorProps> = ({ points, currentPos, isDrawing, snapThreshold = 0.2 }) => {
+  if (!isDrawing || !currentPos || points.length === 0) return null;
 
-  // Float32Array for two 3D points
-  const pointsArray = useMemo(
-    () =>
-      new Float32Array([
-        start.x, start.y + 0.02, start.z,
-        end.x, end.y + 0.02, end.z,
-      ]),
-    [start, end]
-  );
+  let closestX: any;
+  let closestZ: any;
+  let minDistX = Infinity;
+  let minDistZ = Infinity;
 
-  return (
-    <line>
-      <bufferGeometry>
-        {/* Use args to construct BufferAttribute to satisfy R3F/TS types */}
-        <bufferAttribute attach="attributes-position" args={[pointsArray, 3]} />
-      </bufferGeometry>
-      <lineBasicMaterial linewidth={2} color={'yellow'} depthTest={false} />
-    </line>
-  );
+  points.forEach((p: THREE.Vector3) => {
+    const dx = Math.abs(currentPos.x - p.x);
+    const dz = Math.abs(currentPos.z - p.z);
+
+    if (dx < snapThreshold && dx < minDistX) {
+      closestX = p;
+      minDistX = dx;
+    }
+    if (dz < snapThreshold && dz < minDistZ) {
+      closestZ = p;
+      minDistZ = dz;
+    }
+  });
+
+  const guides: JSX.Element[] = [];
+
+  if (closestX) {
+    // use array of [x, y, z] tuples to satisfy Drei Line typing
+    guides.push(
+      <Line
+        key='snap-x'
+        points={[
+          [closestX.x, 0, -100],
+          [closestX.x, 0, 100],
+        ]}
+        color='yellow'
+        lineWidth={2}
+      />
+    );
+  }
+
+  if (closestZ) {
+    guides.push(
+      <Line
+        key='snap-z'
+        points={[
+          [-100, 0, closestZ.z],
+          [100, 0, closestZ.z],
+        ]}
+        color='yellow'
+        lineWidth={2}
+      />
+    );
+  }
+
+  return <>{guides}</>;
 };
