@@ -1,6 +1,6 @@
 'use client';
 
-import { cursorTypeAtom } from '@/utils/atoms';
+import { cursorTypeAtom } from '@/utils/atoms/ui';
 import { Children } from '@/utils/definitions';
 import { Canvas } from '@react-three/fiber';
 import { useAtomValue } from 'jotai';

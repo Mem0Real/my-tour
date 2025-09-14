@@ -1,7 +1,7 @@
 'use client';
 
 import { useAtomValue } from 'jotai';
-import { cursorTypeAtom } from '@/utils/atoms';
+import { cursorTypeAtom } from '@/utils/atoms/ui';
 import { useEffect } from 'react';
 
 export const CursorProvider = () => {
@@ -12,4 +12,4 @@ export const CursorProvider = () => {
   }, [cursor]);
 
   return null;
-}
+};

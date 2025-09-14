@@ -1,6 +1,6 @@
 'use client';
 
-import { cursorTypeAtom, insertAtom } from '@/utils/atoms';
+import { cursorTypeAtom, insertAtom } from '@/utils/atoms/ui';
 import { useSetAtom } from 'jotai';
 import { CursorTypes } from '@/utils/constants';
 

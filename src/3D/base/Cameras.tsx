@@ -1,6 +1,6 @@
 'use client';
 
-import { cameraTypeAtom } from '@/utils/atoms';
+import { cameraTypeAtom } from '@/utils/atoms/ui';
 import { CameraTypes } from '@/utils/constants';
 import { OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
