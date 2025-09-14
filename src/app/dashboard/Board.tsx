@@ -8,6 +8,7 @@ import { insertAtom } from '@/utils/atoms/ui';
 import { isDrawingAtom, wallsAtom } from '@/utils/atoms/drawing';
 import { Wall } from '@/3D/components/Wall';
 import { straighten } from '@/3D/helpers/snapHelper';
+import { LengthOverlay } from '@/3D/components/LengthOverlay';
 
 const WALL_THICKNESS = 0.1;
 const WALL_HEIGHT = 2.5;
@@ -120,16 +121,16 @@ export const Board = () => {
       {currentLoop.map((start, i) => {
         const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1];
         if (!end) return null;
+
         return (
-          <Wall
-            key={`current-${i}`}
-            start={start}
-            end={end}
-            thickness={WALL_THICKNESS}
-            height={WALL_HEIGHT}
-            dashed
-            color='lightblue'
-          />
+          <React.Fragment key={`current-${i}`}>
+            <Wall start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} dashed color='lightblue' />
+
+            {/* Only show length overlay for current preview */}
+            {i === currentLoop.length - 1 && previewPoint && (
+              <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
+            )}
+          </React.Fragment>
         );
       })}
     </>

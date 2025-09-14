@@ -1,4 +1,3 @@
-// LengthOverlay.tsx
 import * as THREE from 'three';
 import { Line, Html } from '@react-three/drei';
 import React from 'react';
@@ -14,50 +13,53 @@ export const LengthOverlay: React.FC<LengthOverlayProps> = ({ start, end, thickn
   if (!visible) return null;
 
   const dir = new THREE.Vector3().subVectors(end, start).normalize();
-  const length = start.distanceTo(end) - thickness; // subtract thickness so ticks sit right at the edge
-
-  // Trimmed edges (accounting for thickness/2 at both ends)
   const halfThick = thickness / 2;
+
+  // Trim so that the rules are placed on the wall edges
   const trimmedStart = start.clone().sub(dir.clone().multiplyScalar(halfThick));
   const trimmedEnd = end.clone().add(dir.clone().multiplyScalar(halfThick));
 
   const mid = new THREE.Vector3().addVectors(trimmedStart, trimmedEnd).multiplyScalar(0.5);
 
-  // Perpendicular vector for ticks
-  const perp = new THREE.Vector3(-dir.z, 0, dir.x).normalize().multiplyScalar(0.15); // tick size
+  // Perpendicular vector for small ticks at the edges
+  const tickSize = 0.15;
+  const perp = new THREE.Vector3(-dir.z, 0, dir.x).normalize().multiplyScalar(tickSize * 2);
+
+  const length = trimmedStart.distanceTo(trimmedEnd);
+  const angle = Math.atan2(dir.z, dir.x);
 
   return (
     <>
       {/* Guideline */}
-      <Line points={[trimmedStart, trimmedEnd]} color='yellow' lineWidth={1} />
+      {/* <Line points={[start, end]} color={'yellow'} lineWidth={1} /> */}
 
-      {/* Start tick */}
-      <Line points={[trimmedStart.clone().add(perp), trimmedStart.clone().sub(perp)]} color='yellow' lineWidth={2} />
+      {/* Start ticks */}
+      <Line
+        points={[start.clone().add(perp), start.clone().sub(perp)]}
+        color={'rgba(100, 100, 100, 0.4)'}
+        lineWidth={2}
+      />
 
-      {/* End tick */}
-      <Line points={[trimmedEnd.clone().add(perp), trimmedEnd.clone().sub(perp)]} color='yellow' lineWidth={2} />
+      {/* End ticks */}
+      <Line points={[end.clone().add(perp), end.clone().sub(perp)]} color={'rgba(100, 100, 100, 0.4)'} lineWidth={2} />
 
-      {/* Length label */}
-      {/* <Html
-        position={[mid.x, 0.05, mid.z]}
-        center
-        rotation-y={-Math.atan2(dir.z, dir.x)} // rotate to follow wall
+      {/* Length text */}
+      <Html
+        position={[mid.x, 0.25, mid.z]} // slightly above the wall
+        style={{
+          background: 'rgba(0,0,0,0.7)',
+          color: 'white',
+          padding: '2px 6px',
+          fontSize: '12px',
+          borderRadius: '3px',
+          whiteSpace: 'nowrap',
+          userSelect: 'none',
+          pointerEvents: 'none',
+          transform: 'translate(-50%, -50%)', // center the text
+        }}
       >
-        <div
-          style={{
-            background: 'black',
-            color: 'yellow',
-            fontSize: '12px',
-            padding: '2px 4px',
-            borderRadius: '2px',
-            whiteSpace: 'nowrap',
-            userSelect: 'none',
-            transform: 'translateY(-10px)', // lift above wall a bit
-          }}
-        >
-          {length.toFixed(2)} m
-        </div>
-      </Html> */}
+        {length.toFixed(2)} m
+      </Html>
     </>
   );
 };
