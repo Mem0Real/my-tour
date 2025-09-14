@@ -1,32 +1,33 @@
 'use client';
 
+import React, { useEffect, useState } from 'react';
 import * as THREE from 'three';
+import { useAtomValue, useAtom } from 'jotai';
+
 import { insertAtom } from '@/utils/atoms/ui';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import React, { JSX, useEffect, useState } from 'react';
-
-import { isDrawingAtom, wallPointsAtom, previewPointAtom, wallsAtom } from '@/utils/atoms/drawing';
-
+import { isDrawingAtom, wallsAtom } from '@/utils/atoms/drawing';
 import { Wall } from '@/3D/components/Wall';
-import { magneticSnap } from '@/3D/helpers/snapHelper';
-import { SnapIndicator } from '@/3D/components/SnapIndicator';
+import { straighten } from '@/3D/helpers/snapHelper';
+
+const WALL_THICKNESS = 0.1;
+const WALL_HEIGHT = 2.5;
+const SNAP_DISTANCE = 0.3; // distance to auto-close loop
+const STRAIGHT_THRESHOLD = 0.1;
 
 export const Board = () => {
   const [hovered, setHovered] = useState(false);
-  const [cursorPos, setCursorPos] = useState(null);
 
   const insert = useAtomValue(insertAtom);
-
   const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
-  const [points, setPoints] = useAtom(wallPointsAtom);
   const [walls, setWalls] = useAtom(wallsAtom);
-  const [preview, setPreview] = useAtom(previewPointAtom);
 
-  const SNAP_DISTANCE = 0.5; // tolerance for snapping to first point
+  // Current drawing loop
+  const [currentLoop, setCurrentLoop] = useState<THREE.Vector3[]>([]);
+  const [previewPoint, setPreviewPoint] = useState<THREE.Vector3 | null>(null);
 
   useEffect(() => {
     if (insert === 'wall' && hovered) {
-      document.body.style.cursor = 'url("/pencil.svg") 4 30, auto';
+      document.body.style.cursor = 'url("/pencil.svg")0 24, auto';
     } else {
       document.body.style.cursor = 'auto';
     }
@@ -35,98 +36,101 @@ export const Board = () => {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setPreview(null);
+        setCurrentLoop([]);
+        setPreviewPoint(null);
         setIsDrawing(false);
-        setPoints([]);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const handleRightClick = (e: any) => {
-    e.stopPropagation();
-  };
+  const handleRightClick = (e: any) => e.stopPropagation();
 
   const handleBoardClick = (e: any) => {
-    if (insert !== 'wall') return;
-    if (e.button === 2) return; // skip if RMB
+    if (!e.point || e.button === 2 || insert !== 'wall') return;
 
-    // const point = e.point.clone(); // 3D point on the board
-    const point = magneticSnap(e.point, points[points.length - 1], points);
+    const clicked = e.point.clone();
+    clicked.y = 0;
 
     if (!isDrawing) {
-      setPoints([point]);
+      // First click starts drawing
+      setCurrentLoop([clicked]);
       setIsDrawing(true);
-    } else {
-      const first = points[0];
-      const last = points[points.length - 1];
-
-      // Check if click is near first point -> close loop
-      if (point.distanceTo(first) < SNAP_DISTANCE && points.length > 2) {
-        const loopPoints = [...points, points[0]];
-        const newWalls = loopPoints.slice(0, -1).map((p, i) => [loopPoints[i], loopPoints[i + 1]]);
-
-        setWalls([...walls, ...newWalls]);
-        setPoints([]);
-        setPreview(null);
-        setIsDrawing(false);
-      } else {
-        // Add wall from last -> new point
-        setWalls([...walls, [last, point]]);
-        setPoints([...points, point]);
-      }
+      return;
     }
+
+    const firstPoint = currentLoop[0];
+    const lastPoint = currentLoop[currentLoop.length - 1];
+
+    const snapped = straighten(lastPoint, clicked, STRAIGHT_THRESHOLD);
+
+    // Check auto-close loop
+    if (snapped.distanceTo(firstPoint) < SNAP_DISTANCE && currentLoop.length > 2) {
+      const newWalls = currentLoop
+        .slice(0)
+        .map((p, i) => [p, currentLoop[(i + 1) % currentLoop.length]] as [THREE.Vector3, THREE.Vector3]);
+
+      setWalls([...walls, ...newWalls]);
+
+      // Reset for next room
+      setCurrentLoop([]);
+      setPreviewPoint(null);
+      setIsDrawing(false);
+      return;
+    }
+
+    // Otherwise, add a new wall segment
+    setCurrentLoop([...currentLoop, snapped]);
+    setPreviewPoint(null);
   };
 
   const handleBoardMove = (e: any) => {
-    const worldPoint = e.point.clone();
-    setCursorPos(worldPoint);
+    if (!e.point || currentLoop.length === 0) return;
+    const point = e.point.clone();
+    point.y = 0;
 
-    if (isDrawing) {
-      const point = magneticSnap(worldPoint, points[points.length - 1], points);
-      setPreview(point);
-    }
+    // Straighten preview
+    const lastPoint = currentLoop[currentLoop.length - 1];
+    setPreviewPoint(straighten(lastPoint, point, STRAIGHT_THRESHOLD));
   };
 
   return (
     <>
+      {/* Invisible plane for raycast */}
       <mesh
         rotation-x={-Math.PI / 2}
         position={[0, 0.01, 0]}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
-        onPointerDown={(e) => handleBoardClick(e)}
-        onPointerMove={(e) => handleBoardMove(e)}
+        onPointerDown={handleBoardClick}
+        onPointerMove={handleBoardMove}
         onContextMenu={handleRightClick}
       >
         <planeGeometry args={[1000, 1000]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Finalized walls */}
-      {walls.map(([a, b], i) => (
-        <Wall key={i} start={a} end={b} showLength />
+      {/* Render finalized walls */}
+      {walls.map(([start, end], i) => (
+        <Wall key={`wall-${i}`} start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} />
       ))}
 
-      {/* Active chain */}
-      {points.map((p, i) => {
-        if (i === points.length - 1 && preview) {
-          const snapped = preview.clone();
-          const isSnapped = points.length > 0 && preview.distanceTo(points[0]) < SNAP_DISTANCE;
-
-          return (
-            <React.Fragment key={`preview-${i}`}>
-              {/* Regular preview wall */}
-              <Wall start={p} end={preview} dashed showLength />
-              <SnapIndicator points={points} currentPos={cursorPos!} />
-            </React.Fragment>
-          );
-        }
-        if (i < points.length - 1) {
-          return <Wall key={`active-${i}`} start={p} end={points[i + 1]} dashed showLength />;
-        }
-        return null;
+      {/* Render current walls with preview */}
+      {currentLoop.map((start, i) => {
+        const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1];
+        if (!end) return null;
+        return (
+          <Wall
+            key={`current-${i}`}
+            start={start}
+            end={end}
+            thickness={WALL_THICKNESS}
+            height={WALL_HEIGHT}
+            dashed
+            color='lightblue'
+          />
+        );
       })}
     </>
   );

@@ -11,14 +11,8 @@ export interface SnapResult {
   snapType: 'x' | 'z' | 'edge' | null;
 }
 
-export const magneticSnap = (
-  point: THREE.Vector3,
-  last?: THREE.Vector3,
-  edges?: THREE.Vector3[] | THREE.Vector3,
-  snapTolerance = 0.2,
-  straightThreshold = 0.2
-) => {
-  const snapped = point.clone();
+export const magneticSnap = (point: THREE.Vector3, last?: THREE.Vector3, edges?: THREE.Vector3[] | THREE.Vector3) => {
+  let snapped = point.clone();
 
   // Straighten relative to last point
   if (last) {
@@ -41,7 +35,7 @@ export const magneticSnap = (
     const dxFirst = Math.abs(snapped.x - first.x);
     const dzFirst = Math.abs(snapped.z - first.z);
 
-    if (dxFirst < snapTolerance || dzFirst < snapTolerance) {
+    if ((dxFirst < snapTolerance || dzFirst < snapTolerance) && edges.length > 0) {
       // snapped.copy(first); // snap straight to first point
       if (dxFirst < snapTolerance) snapped.x = first.x;
       if (dzFirst < snapTolerance) snapped.z = first.z;
@@ -61,19 +55,15 @@ export const magneticSnap = (
     return snapped;
   }
 
-  // else if (edges) {
-  //   if (Math.abs(snapped.x - edges.x) < snapTolerance) {
-  //     snapped.x = edges.x;
-  //   }
-  //   if (Math.abs(snapped.z - edges.z) < snapTolerance) {
-  //     snapped.z = edges.z;
-  //   }
-  // }
-
   return snapped;
 };
 
-export const getSnapGuide = (points: THREE.Vector3[], currentPos: THREE.Vector3, snapTolerance = 0.2): SnapResult => {
+export const getSnapGuide = (
+  points: THREE.Vector3[],
+  currentPos: THREE.Vector3,
+  snapTolerance = 0.2,
+  thickness = 0.2
+): SnapResult => {
   let snapPoint: THREE.Vector3 | null = null;
   let snapType: 'x' | 'z' | 'edge' | null = null;
 
@@ -96,6 +86,7 @@ export const getSnapGuide = (points: THREE.Vector3[], currentPos: THREE.Vector3,
         snapPoint = new THREE.Vector3(currentPos.x, 0, start.z);
         snapType = 'z';
       }
+
       return { snapPoint, snapType };
     }
 
@@ -110,4 +101,40 @@ export const getSnapGuide = (points: THREE.Vector3[], currentPos: THREE.Vector3,
   }
 
   return { snapPoint, snapType };
+};
+
+export function adjustPointToEdge(point: THREE.Vector3, last: THREE.Vector3 | null, thickness: number): THREE.Vector3 {
+  const adjusted = point.clone();
+
+  if (!last) {
+    // First point → just offset downwards along Z (or whichever axis your grid aligns)
+    // This avoids "floating" in the center of the wall
+    // adjusted.z -= thickness / 2;
+    return adjusted;
+  }
+
+  // Subsequent clicks → align edge relative to last
+  const dir = new THREE.Vector3().subVectors(point, last).normalize();
+
+  // Perpendicular to wall direction
+  const perp = new THREE.Vector3(-dir.z, 0, dir.x);
+
+  // Offset new point by half thickness
+  adjusted.add(perp.multiplyScalar(thickness / 2));
+
+  return adjusted;
+}
+
+// ____________ Retry _______________ //
+
+// Snaps point to horizontal or vertical if close enough
+export const straighten = (from: THREE.Vector3, to: THREE.Vector3, straightThreshold: number) => {
+  const snapped = to.clone();
+  const dx = Math.abs(to.x - from.x);
+  const dz = Math.abs(to.z - from.z);
+
+  if (dx < straightThreshold) snapped.x = from.x;
+  if (dz < straightThreshold) snapped.z = from.z;
+
+  return snapped;
 };
