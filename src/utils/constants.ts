@@ -6,6 +6,6 @@ export enum CameraTypes {
 export enum CursorTypes {
   DEFAULT = 'auto',
   CROSS = 'crosshair',
-  PENCIL = 'pointer',
   POINTER = 'pointer',
+  PENCIL = 'url("/pencil.svg") 4 28, auto',
 }
