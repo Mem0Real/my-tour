@@ -26,7 +26,6 @@ export const LengthOverlay: React.FC<LengthOverlayProps> = ({ start, end, thickn
   const perp = new THREE.Vector3(-dir.z, 0, dir.x).normalize().multiplyScalar(tickSize * 2);
 
   const length = trimmedStart.distanceTo(trimmedEnd);
-  const angle = Math.atan2(dir.z, dir.x);
 
   return (
     <>
