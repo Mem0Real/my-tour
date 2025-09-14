@@ -2,7 +2,6 @@
 
 import * as THREE from 'three';
 import { insertAtom } from '@/utils/atoms/ui';
-import { CursorTypes } from '@/utils/constants';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 
@@ -13,7 +12,6 @@ import { magneticSnap } from '@/3D/helpers/snapHelper';
 
 export const Board = () => {
   const [hovered, setHovered] = useState(false);
-  const [placement, setPlacement] = useState<THREE.Vector3 | undefined>();
 
   const insert = useAtomValue(insertAtom);
 
@@ -82,13 +80,10 @@ export const Board = () => {
   };
 
   const handleBoardMove = (e: any) => {
-    // if (isDrawing) setPreview(e.point.clone());
     if (isDrawing) {
       const point = magneticSnap(e.point, points[points.length - 1], points[0]);
       setPreview(point);
     }
-
-    if (insert === 'wall') setPlacement(e.point);
   };
 
   return (
@@ -108,16 +103,16 @@ export const Board = () => {
 
       {/* Finalized walls */}
       {walls.map(([a, b], i) => (
-        <Wall key={i} start={a} end={b} />
+        <Wall key={i} start={a} end={b} showLength />
       ))}
 
       {/* Active chain */}
       {points.map((p, i) => {
         if (i === points.length - 1 && preview) {
-          return <Wall key={`preview-${i}`} start={p} end={preview} dashed />;
+          return <Wall key={`preview-${i}`} start={p} end={preview} dashed showLength />;
         }
         if (i < points.length - 1) {
-          return <Wall key={`active-${i}`} start={p} end={points[i + 1]} dashed />;
+          return <Wall key={`active-${i}`} start={p} end={points[i + 1]} dashed showLength />;
         }
         return null;
       })}
