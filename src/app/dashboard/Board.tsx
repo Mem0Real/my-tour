@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { insertAtom } from '@/utils/atoms/ui';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import React, { useEffect, useState } from 'react';
+import React, { JSX, useEffect, useState } from 'react';
 
 import { isDrawingAtom, wallPointsAtom, previewPointAtom, wallsAtom } from '@/utils/atoms/drawing';
 
@@ -53,7 +53,7 @@ export const Board = () => {
     if (e.button === 2) return; // skip if RMB
 
     // const point = e.point.clone(); // 3D point on the board
-    const point = magneticSnap(e.point, points[points.length - 1], points[0]);
+    const point = magneticSnap(e.point, points[points.length - 1], points);
 
     if (!isDrawing) {
       setPoints([point]);
@@ -64,12 +64,10 @@ export const Board = () => {
 
       // Check if click is near first point -> close loop
       if (point.distanceTo(first) < SNAP_DISTANCE && points.length > 2) {
-        // setWalls([...walls, ...points.map((p, i) => [p, points[(i + 1) % points.length]])]);
-
         const loopPoints = [...points, points[0]];
         const newWalls = loopPoints.slice(0, -1).map((p, i) => [loopPoints[i], loopPoints[i + 1]]);
-        setWalls([...walls, ...newWalls]);
 
+        setWalls([...walls, ...newWalls]);
         setPoints([]);
         setPreview(null);
         setIsDrawing(false);
@@ -86,7 +84,7 @@ export const Board = () => {
     setCursorPos(worldPoint);
 
     if (isDrawing) {
-      const point = magneticSnap(worldPoint, points[points.length - 1], points[0]);
+      const point = magneticSnap(worldPoint, points[points.length - 1], points);
       setPreview(point);
     }
   };
@@ -121,10 +119,7 @@ export const Board = () => {
             <React.Fragment key={`preview-${i}`}>
               {/* Regular preview wall */}
               <Wall start={p} end={preview} dashed showLength />
-
-              {/* If snapping is active, show SnapIndicator */}
-              {/* {isSnapped && <SnapIndicator start={p} end={snapped} />} */}
-              <SnapIndicator points={points} currentPos={cursorPos!} isDrawing={isDrawing} />
+              <SnapIndicator points={points} currentPos={cursorPos!} />
             </React.Fragment>
           );
         }

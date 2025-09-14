@@ -1,21 +1,20 @@
-import * as THREE from 'three';
+import { JSX } from 'react';
 
-const snapDistance = 0.01;
+import * as THREE from 'three';
+import { Line } from '@react-three/drei';
+
 const straightThreshold = 0.08;
 const snapTolerance = 0.15;
 
-export const magneticSnap = (point: THREE.Vector3, last?: THREE.Vector3, first?: THREE.Vector3) => {
-  // Magnetic snap to nearest grid line
-  // const gx = Math.round(snapped.x);
-  // const gz = Math.round(snapped.z);
+export const snapThreshold = 0.2;
+const halfThickness = 0.2 / 2;
 
-  // if (Math.abs(snapped.x - gx) < snapDistance) {
-  //   snapped.x = gx;
-  // }
-  // if (Math.abs(snapped.z - gz) < snapDistance) {
-  //   snapped.z = gz;
-  // }
+export interface SnapResult {
+  snapPoint: THREE.Vector3 | null;
+  snapType: 'x' | 'z' | 'edge' | null;
+}
 
+export const magneticSnap = (point: THREE.Vector3, last?: THREE.Vector3, edges?: THREE.Vector3[] | THREE.Vector3) => {
   const snapped = point.clone();
 
   // Straighten relative to last point
@@ -33,14 +32,63 @@ export const magneticSnap = (point: THREE.Vector3, last?: THREE.Vector3, first?:
     }
   }
 
-  if (first) {
-    if (Math.abs(snapped.x - first.x) < snapTolerance) {
-      snapped.x = first.x;
+  // Snap against edges, including offsets for wall thickness
+  if (edges && Array.isArray(edges)) {
+    edges.forEach((edge) => {
+      if (Math.abs(snapped.x - edge.x) < snapTolerance) {
+        snapped.x = edge.x;
+      }
+      if (Math.abs(snapped.z - edge.z) < snapTolerance) {
+        snapped.z = edge.z;
+      }
+    });
+
+    return snapped;
+  } else if (edges) {
+    if (Math.abs(snapped.x - edges.x) < snapTolerance) {
+      snapped.x = edges.x;
     }
-    if (Math.abs(snapped.z - first.z) < snapTolerance) {
-      snapped.z = first.z;
+    if (Math.abs(snapped.z - edges.z) < snapTolerance) {
+      snapped.z = edges.z;
     }
   }
 
   return snapped;
+};
+
+export const getSnapGuide = (
+  points: THREE.Vector3[],
+  currentPos: THREE.Vector3,
+  snapThreshold: number = 0.2
+): SnapResult => {
+  let snapPoint: THREE.Vector3 | null = null;
+  let snapType: 'x' | 'z' | 'edge' | null = null;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const start = points[i];
+    const end = points[i + 1];
+
+    // Check vertical alignment (x)
+    if (Math.abs(currentPos.x - start.x) < snapThreshold) {
+      snapPoint = new THREE.Vector3(start.x, 0, currentPos.z);
+      snapType = 'x';
+    }
+
+    // Check horizontal alignment (z)
+    if (Math.abs(currentPos.z - start.z) < snapThreshold) {
+      snapPoint = new THREE.Vector3(currentPos.x, 0, start.z);
+      snapType = 'z';
+    }
+
+    // Check if near edge midpoint (optional magnetic snapping)
+    const edgeMid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+    const dist = edgeMid.distanceTo(currentPos);
+
+    if (dist < snapThreshold) {
+      snapPoint = edgeMid;
+      snapType = 'edge';
+    }
+  }
+
+  return { snapPoint, snapType };
 };
