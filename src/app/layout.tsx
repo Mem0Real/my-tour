@@ -3,6 +3,7 @@ import './globals.css';
 import { Children } from '@/utils/definitions';
 import { Navbar } from '@/app/components/Navbar';
 import { CursorProvider } from '@/app/providers/CursorProvider';
+import { Provider } from 'jotai';
 
 export const metadata: Metadata = {
   title: 'My Tour',
@@ -13,9 +14,11 @@ export default function RootLayout({ children }: Readonly<Children>) {
   return (
     <html lang='en'>
       <body>
-        <Navbar />
-        <CursorProvider />
-        {children}
+        <Provider>
+          <Navbar />
+          <CursorProvider />
+          {children}
+        </Provider>
       </body>
     </html>
   );

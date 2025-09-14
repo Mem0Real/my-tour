@@ -1,12 +1,12 @@
 'use client';
 
 import { cursorTypeAtom, insertAtom } from '@/utils/atoms/ui';
-import { useSetAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { CursorTypes } from '@/utils/constants';
 
 export const Toolbar = () => {
   const setCursor = useSetAtom(cursorTypeAtom);
-  const setInsert = useSetAtom(insertAtom);
+  const [insert, setInsert] = useAtom(insertAtom);
 
   return (
     <header>
@@ -15,7 +15,7 @@ export const Toolbar = () => {
           <button
             className='hover:cursor-pointer'
             onClick={() => {
-              setInsert('wall');
+              setInsert((prev) => (prev === 'wall' ? null : 'wall'));
               setCursor((prev) => (prev === CursorTypes.PENCIL ? CursorTypes.DEFAULT : CursorTypes.PENCIL));
             }}
           >
