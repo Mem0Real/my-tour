@@ -138,3 +138,46 @@ export const straighten = (from: THREE.Vector3, to: THREE.Vector3, straightThres
 
   return snapped;
 };
+
+export const getSnappedPoint = (
+  cursor: THREE.Vector3 | { x: number; y: number; z: number },
+  currentLoop: THREE.Vector3[],
+  allWalls: [THREE.Vector3, THREE.Vector3][],
+  snapTolerance: number
+) => {
+  const snapped = cursor instanceof THREE.Vector3 ? cursor.clone() : new THREE.Vector3(cursor.x, cursor.y, cursor.z);
+
+  // 1) Snap to first point axes (priority)
+  if (currentLoop.length > 0) {
+    const first = currentLoop[0];
+    if (Math.abs(cursor.x - first.x) < snapTolerance) snapped.x = first.x;
+    if (Math.abs(cursor.z - first.z) < snapTolerance) snapped.z = first.z;
+  }
+
+  // 2) Snap to all other wall endpoints
+  allWalls.forEach(([start, end]) => {
+    if (Math.abs(cursor.x - start.x) < snapTolerance) snapped.x = start.x;
+    if (Math.abs(cursor.z - start.z) < snapTolerance) snapped.z = start.z;
+    if (Math.abs(cursor.x - end.x) < snapTolerance) snapped.x = end.x;
+    if (Math.abs(cursor.z - end.z) < snapTolerance) snapped.z = end.z;
+  });
+
+  return snapped;
+};
+
+export const snapToPoints = (
+  cursor: THREE.Vector3,
+  currentLoop: THREE.Vector3[],
+  allWalls: [THREE.Vector3, THREE.Vector3][],
+  snapTolerance: number
+) => {
+  const snapped = cursor.clone();
+  const points: THREE.Vector3[] = [...currentLoop, ...allWalls.flatMap(([start, end]) => [start, end])];
+
+  points.forEach((p) => {
+    if (Math.abs(cursor.x - p.x) < snapTolerance) snapped.x = p.x;
+    if (Math.abs(cursor.z - p.z) < snapTolerance) snapped.z = p.z;
+  });
+
+  return snapped;
+};

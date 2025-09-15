@@ -57,7 +57,7 @@ export const LengthOverlay: React.FC<LengthOverlayProps> = ({ start, end, thickn
           transform: 'translate(-50%, -50%)', // center the text
         }}
       >
-        {length.toFixed(2)} m
+        {length.toFixed(2)} cm
       </Html>
     </>
   );

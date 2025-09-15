@@ -2,18 +2,21 @@
 
 import React, { useEffect, useState } from 'react';
 import * as THREE from 'three';
-import { useAtomValue, useAtom } from 'jotai';
 
+import { useAtomValue, useAtom } from 'jotai';
 import { insertAtom } from '@/utils/atoms/ui';
 import { isDrawingAtom, wallsAtom } from '@/utils/atoms/drawing';
+
 import { Wall } from '@/3D/components/Wall';
-import { straighten } from '@/3D/helpers/snapHelper';
 import { LengthOverlay } from '@/3D/components/LengthOverlay';
+
+import { straighten, getSnappedPoint, snapToPoints } from '@/3D/helpers/snapHelper';
 
 const WALL_THICKNESS = 0.1;
 const WALL_HEIGHT = 2.5;
-const SNAP_DISTANCE = 0.3; // distance to auto-close loop
+const SNAP_DISTANCE = 0.3; // auto-close loop distance
 const STRAIGHT_THRESHOLD = 0.1;
+const SNAP_TOLERANCE = 0.3;
 
 export const Board = () => {
   const [hovered, setHovered] = useState(false);
@@ -22,16 +25,11 @@ export const Board = () => {
   const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
   const [walls, setWalls] = useAtom(wallsAtom);
 
-  // Current drawing loop
   const [currentLoop, setCurrentLoop] = useState<THREE.Vector3[]>([]);
   const [previewPoint, setPreviewPoint] = useState<THREE.Vector3 | null>(null);
 
   useEffect(() => {
-    if (insert === 'wall' && hovered) {
-      document.body.style.cursor = 'url("/pencil.svg")0 24, auto';
-    } else {
-      document.body.style.cursor = 'auto';
-    }
+    document.body.style.cursor = insert === 'wall' && hovered ? 'url("/pencil.svg")0 24, auto' : 'auto';
   }, [insert, hovered]);
 
   useEffect(() => {
@@ -51,49 +49,57 @@ export const Board = () => {
   const handleBoardClick = (e: any) => {
     if (!e.point || e.button === 2 || insert !== 'wall') return;
 
-    const clicked = e.point.clone();
+    let clicked = e.point.clone();
     clicked.y = 0;
 
+    // Snap to first point & all walls
+    const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+    const snapped = snapToPoints(clicked, currentLoop, allWalls, SNAP_TOLERANCE);
+
     if (!isDrawing) {
-      // First click starts drawing
-      setCurrentLoop([clicked]);
+      setCurrentLoop([snapped]);
       setIsDrawing(true);
+      setPreviewPoint(null);
       return;
     }
 
     const firstPoint = currentLoop[0];
     const lastPoint = currentLoop[currentLoop.length - 1];
 
-    const snapped = straighten(lastPoint, clicked, STRAIGHT_THRESHOLD);
+    const newPoint = straighten(lastPoint, clicked, STRAIGHT_THRESHOLD);
 
-    // Check auto-close loop
-    if (snapped.distanceTo(firstPoint) < SNAP_DISTANCE && currentLoop.length > 2) {
+    // Auto-close loop if near first point
+    if (newPoint.distanceTo(firstPoint) < SNAP_DISTANCE && currentLoop.length > 2) {
       const newWalls = currentLoop
         .slice(0)
         .map((p, i) => [p, currentLoop[(i + 1) % currentLoop.length]] as [THREE.Vector3, THREE.Vector3]);
 
       setWalls([...walls, ...newWalls]);
-
-      // Reset for next room
       setCurrentLoop([]);
       setPreviewPoint(null);
       setIsDrawing(false);
       return;
     }
 
-    // Otherwise, add a new wall segment
-    setCurrentLoop([...currentLoop, snapped]);
+    setCurrentLoop([...currentLoop, newPoint]);
     setPreviewPoint(null);
   };
 
   const handleBoardMove = (e: any) => {
-    if (!e.point || currentLoop.length === 0) return;
-    const point = e.point.clone();
-    point.y = 0;
+    if (!e.point || !isDrawing) return;
 
-    // Straighten preview
-    const lastPoint = currentLoop[currentLoop.length - 1];
-    setPreviewPoint(straighten(lastPoint, point, STRAIGHT_THRESHOLD));
+    let cursor = e.point.clone();
+    cursor.y = 0;
+
+    const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+    const snapped = snapToPoints(cursor, currentLoop, allWalls, SNAP_TOLERANCE);
+
+    if (currentLoop.length > 0) {
+      const lastPoint = currentLoop[currentLoop.length - 1];
+      setPreviewPoint(straighten(lastPoint, snapped, STRAIGHT_THRESHOLD));
+    } else {
+      setPreviewPoint(snapped);
+    }
   };
 
   return (
@@ -125,8 +131,6 @@ export const Board = () => {
         return (
           <React.Fragment key={`current-${i}`}>
             <Wall start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} dashed color='lightblue' />
-
-            {/* Only show length overlay for current preview */}
             {i === currentLoop.length - 1 && previewPoint && (
               <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
             )}
