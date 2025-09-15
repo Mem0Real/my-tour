@@ -11,9 +11,11 @@ export const CanvasBase = ({ props }: any) => {
   const cursorType = useAtomValue(cursorTypeAtom);
 
   return (
-    <Canvas shadows gl={{ antialias: false }} className={`cursor-${cursorType || 'auto'}`} {...props}>
-      <r3f.Out />
-      <Preload all />
-    </Canvas>
+    <div className='w-full h-full'>
+      <Canvas shadows gl={{ antialias: false }} className={`cursor-${cursorType || 'auto'}`} {...props}>
+        <r3f.Out />
+        <Preload all />
+      </Canvas>
+    </div>
   );
 };
