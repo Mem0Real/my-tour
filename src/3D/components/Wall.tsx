@@ -2,20 +2,7 @@
 
 import * as THREE from 'three';
 import React, { FC, useMemo } from 'react';
-
-interface WallProps {
-  id: string;
-  start: THREE.Vector3;
-  end: THREE.Vector3;
-  thickness?: number;
-  height?: number;
-  dashed?: boolean;
-  color?: string;
-  // new props for editor
-  onHoverEndpoint?: (wallId: string, index: 0 | 1 | null) => void;
-  onClickEndpoint?: (wallId: string, index: 0 | 1) => void;
-  hoveredEndpoint?: { wallId: string; index: 0 | 1 } | null;
-}
+import { WallProps } from '@/utils/definitions';
 
 export const Wall: FC<WallProps> = ({
   id,
@@ -38,7 +25,7 @@ export const Wall: FC<WallProps> = ({
 
   const angle = Math.atan2(dir.z, dir.x);
 
-  const isHovered = (index: 0 | 1) => hoveredEndpoint?.wallId === id && hoveredEndpoint?.index === index;
+  const isHovered = (index: 0 | 1) => hoveredEndpoint === index;
 
   return (
     <group>
@@ -57,36 +44,24 @@ export const Wall: FC<WallProps> = ({
       {/* Start endpoint */}
       <mesh
         position={start}
-        onPointerOver={() => onHoverEndpoint?.(id, 0)}
-        onPointerOut={() => onHoverEndpoint?.(id, null)}
-        onClick={() => onClickEndpoint?.(id, 0)}
+        onPointerOver={() => onHoverEndpoint?.(0)}
+        onPointerOut={() => onHoverEndpoint?.(null)}
+        onClick={() => onClickEndpoint?.(0)}
       >
-        <sphereGeometry args={[0.12, 8, 8]} />
-        <meshBasicMaterial transparent opacity={50} />
+        <boxGeometry args={[0.2, 0.2, 0.2]} />
+        {isHovered(0) && <meshStandardMaterial color={'orange'} />}
       </mesh>
-      {isHovered(0) && (
-        <mesh position={start}>
-          <boxGeometry args={[0.2, 0.2, 0.2]} />
-          <meshBasicMaterial color='yellow' />
-        </mesh>
-      )}
 
       {/* End endpoint */}
       <mesh
         position={end}
-        onPointerOver={() => onHoverEndpoint?.(id, 1)}
-        onPointerOut={() => onHoverEndpoint?.(id, null)}
-        onClick={() => onClickEndpoint?.(id, 1)}
+        onPointerOver={() => onHoverEndpoint?.(1)}
+        onPointerOut={() => onHoverEndpoint?.(null)}
+        onClick={() => onClickEndpoint?.(1)}
       >
-        <sphereGeometry args={[0.12, 8, 8]} />
-        <meshBasicMaterial transparent opacity={50} />
+        <boxGeometry args={[0.2, 0.2, 0.2]} />
+        {isHovered(1) && <meshStandardMaterial color={'orange'} />}
       </mesh>
-      {isHovered(1) && (
-        <mesh position={end}>
-          <boxGeometry args={[0.2, 0.2, 0.2]} />
-          <meshBasicMaterial color='yellow' />
-        </mesh>
-      )}
     </group>
   );
 };
