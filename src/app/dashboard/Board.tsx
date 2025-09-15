@@ -12,6 +12,7 @@ import { LengthOverlay } from '@/3D/components/LengthOverlay';
 import { SnapCues } from '@/3D/components/SnapCues';
 
 import { straighten, snapToPoints } from '@/3D/helpers/snapHelper';
+import { LoopPoint } from '@/utils/definitions';
 
 const WALL_THICKNESS = 0.1;
 const WALL_HEIGHT = 2.5;
@@ -27,7 +28,7 @@ export const Board = () => {
   const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
   const [walls, setWalls] = useAtom(wallsAtom);
 
-  const [currentLoop, setCurrentLoop] = useState<THREE.Vector3[]>([]);
+  const [currentLoop, setCurrentLoop] = useState<LoopPoint[]>([]);
   const [previewPoint, setPreviewPoint] = useState<THREE.Vector3 | null>(null);
   const [snapCues, setSnapCues] = useState<THREE.Vector3[]>([]);
 
@@ -49,6 +50,56 @@ export const Board = () => {
 
   const handleRightClick = (e: any) => e.stopPropagation();
 
+  const handleBoardClick = (e: any) => {
+    if (!e.point || e.button === 2 || insert !== 'wall') return;
+
+    let clicked = e.point.clone();
+    clicked.y = 0;
+
+    const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+
+    // Pass an array of Vector3 to snapToPoints
+    const currentLoopPositions = currentLoop.map((p) => p.pos);
+    const { snappedPoint, snappedWall } = snapToPoints(clicked, currentLoopPositions, allWalls, SNAP_TOLERANCE);
+
+    const newPointData: LoopPoint = {
+      pos: snappedPoint,
+      snappedWall: snappedWall || undefined,
+    };
+
+    if (!isDrawing) {
+      // Start new loop
+      setCurrentLoop([newPointData]);
+      setIsDrawing(true);
+      setPreviewPoint(null);
+      return;
+    }
+
+    const firstPoint = currentLoop[0];
+    const lastPoint = currentLoop[currentLoop.length - 1];
+
+    // Straighten relative to last point
+    newPointData.pos = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
+
+    // Auto-close if near first point or both ends snapped to walls
+    const bothEndsSnapped = !!firstPoint.snappedWall && !!newPointData.snappedWall;
+
+    if ((newPointData.pos.distanceTo(firstPoint.pos) < SNAP_DISTANCE && currentLoop.length > 2) || bothEndsSnapped) {
+      const newWalls = currentLoop
+        .concat([newPointData])
+        .map((p, i, arr) => [p.pos, arr[(i + 1) % arr.length].pos] as [THREE.Vector3, THREE.Vector3]);
+
+      setWalls([...walls, ...newWalls]);
+      setCurrentLoop([]);
+      setPreviewPoint(null);
+      setIsDrawing(false);
+      return;
+    }
+
+    setCurrentLoop([...currentLoop, newPointData]);
+    setPreviewPoint(null);
+  };
+
   const handleBoardMove = (e: any) => {
     if (!e.point || !isDrawing) return;
 
@@ -59,64 +110,20 @@ export const Board = () => {
     const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
 
     // Snap cursor to first point axis + other walls
-    let snapped = snapToPoints(cursor, currentLoop, allWalls, SNAP_TOLERANCE);
+    const { snappedPoint } = snapToPoints(
+      cursor,
+      currentLoop.map((p) => p.pos),
+      allWalls,
+      SNAP_TOLERANCE
+    );
 
     // Straighten relative to last point
     if (currentLoop.length > 0) {
       const lastPoint = currentLoop[currentLoop.length - 1];
-      snapped = straighten(lastPoint, snapped, STRAIGHT_THRESHOLD);
-    }
+      setPreviewPoint(straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD));
+    } else setPreviewPoint(snappedPoint);
 
-    setPreviewPoint(snapped);
-    setSnapCues([snapped]);
-  };
-
-  const handleBoardClick = (e: any) => {
-    if (!e.point || e.button === 2 || insert !== 'wall') return;
-
-    // Use already previewed point if it exists to avoid off-click issues
-    const newPoint = previewPoint
-      ? previewPoint.clone()
-      : (() => {
-          const clicked = e.point.clone();
-          clicked.y = 0;
-
-          const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
-          let snapped = snapToPoints(clicked, currentLoop, allWalls, SNAP_TOLERANCE);
-
-          if (currentLoop.length > 0) {
-            const lastPoint = currentLoop[currentLoop.length - 1];
-            snapped = straighten(lastPoint, snapped, STRAIGHT_THRESHOLD);
-          }
-          return snapped;
-        })();
-
-    if (!isDrawing) {
-      setCurrentLoop([newPoint]);
-      setIsDrawing(true);
-      setPreviewPoint(null);
-      return;
-    }
-
-    const firstPoint = currentLoop[0];
-
-    // Auto-close loop if near first point
-    if (newPoint.distanceTo(firstPoint) < SNAP_DISTANCE && currentLoop.length > 2) {
-      const newWalls = currentLoop
-        .slice(0)
-        .map((p, i) => [p, currentLoop[(i + 1) % currentLoop.length]] as [THREE.Vector3, THREE.Vector3]);
-
-      setWalls([...walls, ...newWalls]);
-      setCurrentLoop([]);
-      setPreviewPoint(null);
-      setIsDrawing(false);
-      setSnapCues([]);
-      return;
-    }
-
-    setCurrentLoop([...currentLoop, newPoint]);
-    setPreviewPoint(null);
-    setSnapCues([]);
+    // setSnapCues([snapped]);
   };
 
   return (
@@ -144,8 +151,10 @@ export const Board = () => {
       ))}
 
       {/* Render current walls with preview */}
-      {currentLoop.map((start, i) => {
-        const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1];
+      {currentLoop.map((pointData, i) => {
+        const start = pointData.pos;
+        const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1].pos;
+
         if (!end) return null;
 
         return (
