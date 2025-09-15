@@ -61,14 +61,14 @@ export const Board = () => {
     const currentLoopPositions = currentLoop.map((p) => p.pos);
     const { snappedPoint, snappedWall } = snapToPoints(clicked, currentLoopPositions, allWalls, SNAP_TOLERANCE);
 
-    const newPointData: LoopPoint = {
+    const pointData: LoopPoint = {
       pos: snappedPoint,
       snappedWall,
     };
 
     if (!isDrawing) {
       // Start new loop
-      setCurrentLoop([newPointData]);
+      setCurrentLoop([pointData]);
       setIsDrawing(true);
       setPreviewPoint(null);
       return;
@@ -78,17 +78,15 @@ export const Board = () => {
     const lastPoint = currentLoop[currentLoop.length - 1];
 
     // Straighten relative to last point
-    newPointData.pos = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
+    const newPos = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
+    const newPointData: LoopPoint = { pos: newPos, snappedWall: snappedWall || undefined };
 
     // _____ Auto-close conditions ______ //
+    const nearFirstPoint = newPos.distanceTo(firstPoint.pos) < SNAP_DISTANCE && currentLoop.length > 2;
+    const bothEndsSnapped = !!firstPoint.snappedWall && !!newPointData.snappedWall;
 
     // 1) Close if near first point (basic)
-    const nearFirst = newPointData.pos.distanceTo(firstPoint.pos) < SNAP_DISTANCE && currentLoop.length > 2;
-
-    // 2) Close if first & new point are both snapped to walls (can be different)
-    const bothEndsSnapped = firstPoint.snappedWall && newPointData.snappedWall;
-
-    if (nearFirst || bothEndsSnapped) {
+    if (nearFirstPoint) {
       const newWalls = currentLoop
         .concat([newPointData])
         .map((p, i, arr) => [p.pos, arr[(i + 1) % arr.length].pos] as [THREE.Vector3, THREE.Vector3]);
@@ -98,8 +96,21 @@ export const Board = () => {
       setPreviewPoint(null);
       setIsDrawing(false);
       return;
+    } else if (bothEndsSnapped) {
+      // 2) Close if first & new point are both snapped to walls (can be different)
+      const newWalls = currentLoop
+        .concat([newPointData])
+        .map((p, i, arr) => [p.pos, arr[i + 1]?.pos].filter(Boolean) as THREE.Vector3[])
+        .filter((seg) => seg.length === 2) as [THREE.Vector3, THREE.Vector3][];
+
+      setWalls([...walls, ...newWalls]);
+      setCurrentLoop([]);
+      setPreviewPoint(null);
+      setIsDrawing(false);
+      return;
     }
 
+    // 3) Proceed normally
     setCurrentLoop([...currentLoop, newPointData]);
     setPreviewPoint(null);
   };
