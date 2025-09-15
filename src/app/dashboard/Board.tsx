@@ -32,20 +32,46 @@ export const Board = () => {
   const [previewPoint, setPreviewPoint] = useState<THREE.Vector3 | null>(null);
   const [snapCues, setSnapCues] = useState<THREE.Vector3[]>([]);
 
+  const [highlightedPoint, setHighlightedPoint] = useState<LoopPoint | null>(null);
+  const [editingPoint, setEditingPoint] = useState<{
+    loopIndex: number;
+    pointIndex: number;
+  } | null>(null);
+
+  const [hoveredEndpoint, setHoveredEndpoint] = useState<{ wallId: string; index: 0 | 1 } | null>(null);
+  const [isShiftDown, setIsShiftDown] = useState(false);
+
+  // Cursor change
   useEffect(() => {
     document.body.style.cursor = insert === 'wall' && hovered ? 'url("/pencil.svg")0 24, auto' : 'auto';
   }, [insert, hovered]);
 
+  // Esc exit current editing wall
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setCurrentLoop([]);
-        setPreviewPoint(null);
-        setIsDrawing(false);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'Escape':
+          setCurrentLoop([]);
+          setPreviewPoint(null);
+          setIsDrawing(false);
+          break;
+        case 'Shift':
+          setIsShiftDown(true);
+          break;
       }
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') setIsShiftDown(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
   }, []);
 
   const handleRightClick = (e: any) => e.stopPropagation();
@@ -116,24 +142,138 @@ export const Board = () => {
   };
 
   const handleBoardMove = (e: any) => {
-    if (!e.point || !isDrawing) return;
+    if (!e.point) return;
 
     const cursor = e.point.clone();
     cursor.y = 0;
 
-    // Flatten wall points
-    const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+    // Edit mode
+    if (editingPoint) {
+      const updatedLoop = [...currentLoop];
+      updatedLoop[editingPoint.pointIndex] = {
+        ...updatedLoop[editingPoint.pointIndex],
+        pos: cursor,
+      };
 
-    // Snap cursor to first point axis + other walls
-    const currentLoopPositions = currentLoop.map((p) => p.pos);
-    const { snappedPoint } = snapToPoints(cursor, currentLoopPositions, allWalls, SNAP_TOLERANCE);
+      setCurrentLoop(updatedLoop);
+      return;
+    }
 
-    // Straighten relative to last point
-    if (currentLoop.length > 0) {
+    // Highlight
+    if (insert === 'wall') {
+      const hovered = currentLoop.find((p) => p.pos.distanceTo(cursor) < SNAP_TOLERANCE);
+      setHighlightedPoint(hovered || null);
+    }
+
+    // Drawing Preview
+    if (isDrawing) {
+      // Flatten wall points
+      const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+
+      // Snap cursor to first point axis + other walls
+      const currentLoopPositions = currentLoop.map((p) => p.pos);
+      const { snappedPoint } = snapToPoints(cursor, currentLoopPositions, allWalls, SNAP_TOLERANCE);
+
+      // Straighten relative to last point
+      if (currentLoop.length > 0) {
+        const lastPoint = currentLoop[currentLoop.length - 1];
+        setPreviewPoint(straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD));
+        setSnapCues([snappedPoint]);
+      } else setPreviewPoint(snappedPoint);
+    }
+  };
+
+  const handlePointerMove = (e: any) => {
+    if (!e.point) return;
+
+    const cursor = e.point.clone();
+    cursor.y = 0;
+
+    // --- EDIT MODE ---
+    if (editingPoint) {
+      const updatedLoop = [...currentLoop];
+      updatedLoop[editingPoint.pointIndex] = {
+        ...updatedLoop[editingPoint.pointIndex],
+        pos: cursor,
+      };
+      setCurrentLoop(updatedLoop);
+      setPreviewPoint(cursor); // optional: show preview while dragging
+      return;
+    }
+
+    // --- DRAWING ---
+    if (isDrawing) {
+      const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+      const { snappedPoint } = snapToPoints(
+        cursor,
+        currentLoop.map((p) => p.pos),
+        allWalls,
+        SNAP_TOLERANCE
+      );
+
       const lastPoint = currentLoop[currentLoop.length - 1];
-      setPreviewPoint(straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD));
+      const straightened = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
+
+      setPreviewPoint(straightened);
       setSnapCues([snappedPoint]);
-    } else setPreviewPoint(snappedPoint);
+    }
+
+    // --- HIGHLIGHT ---
+    if (insert === 'wall' && !editingPoint) {
+      const hovered = currentLoop.find((p) => p.pos.distanceTo(cursor) < SNAP_TOLERANCE);
+      setHighlightedPoint(hovered || null);
+    }
+  };
+
+  // const handlePointerDown = (e: any) => {
+  //   if (!e.point || insert !== 'wall') return;
+
+  //   const cursor = e.point.clone();
+  //   cursor.y = 0;
+
+  //   // Edit mode (Shift + click)
+  //   if (e.shiftKey && highlightedPoint) {
+  //     console.log('Editing');
+  //     const index = currentLoop.findIndex((p) => p === highlightedPoint);
+  //     if (index !== -1) {
+  //       setEditingPoint({ loopIndex: 0, pointIndex: index });
+  //       setIsDrawing(true); // optional: to allow preview along drag
+  //       return;
+  //     }
+  //   }
+
+  //   console.log('Normal');
+
+  //   // Normal drawing
+  //   handleBoardClick(e);
+  // };
+
+  const handleEndpointClick = (wallId: string, index: 0 | 1) => {
+    if (!isShiftDown) return;
+    console.log('clicked');
+
+    // find the wall
+    const wall = walls.find((_, i) => `wall-${i}` === wallId);
+    if (!wall) {
+      console.log('no wall');
+      return;
+    }
+
+    const pos = index === 0 ? wall[0] : wall[1];
+
+    console.log(pos);
+
+    // act like the point is clicked to start drawing
+    setCurrentLoop([{ pos, snappedWall: null }]);
+    setIsDrawing(true);
+    setPreviewPoint(null);
+  };
+
+  const handlePointerUp = (e: any) => {
+    if (editingPoint) {
+      setEditingPoint(null);
+      setPreviewPoint(null);
+    }
   };
 
   return (
@@ -144,8 +284,9 @@ export const Board = () => {
         position={[0, 0.01, 0]}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
-        onPointerDown={handleBoardClick}
-        onPointerMove={handleBoardMove}
+        // onPointerDown={handleBoardClick}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
         onContextMenu={handleRightClick}
       >
         <planeGeometry args={[1000, 1000]} />
@@ -155,8 +296,20 @@ export const Board = () => {
       {/* Render finalized walls */}
       {walls.map(([start, end], i) => (
         <React.Fragment key={`wall-${i}`}>
-          <Wall start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} />
-          <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />
+          <Wall
+            id={`wall-${i}`}
+            start={start}
+            end={end}
+            thickness={WALL_THICKNESS}
+            height={WALL_HEIGHT}
+            onHoverEndpoint={(wallId, index) => {
+              if (index === null) setHoveredEndpoint(null);
+              else setHoveredEndpoint({ wallId, index });
+            }}
+            onClickEndpoint={handleEndpointClick}
+            hoveredEndpoint={hoveredEndpoint}
+          />
+          {i !== walls.length - 1 && <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />}
         </React.Fragment>
       ))}
 
@@ -169,7 +322,15 @@ export const Board = () => {
 
         return (
           <React.Fragment key={`current-${i}`}>
-            <Wall start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} dashed color='lightblue' />
+            <Wall
+              id={`wall-${i}`}
+              start={start}
+              end={end}
+              thickness={WALL_THICKNESS}
+              height={WALL_HEIGHT}
+              dashed
+              color='lightblue'
+            />
             {i === currentLoop.length - 1 && previewPoint && (
               <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
             )}
@@ -179,6 +340,14 @@ export const Board = () => {
 
       {/* Snap Cues */}
       <SnapCues points={snapCues} />
+
+      {/* Highlight */}
+      {/* {currentLoop.map((p, i) => (
+        <mesh key={`point-${i}`} position={p.pos.toArray()}>
+          <boxGeometry args={[0.15, 0.15, 0.15]} />
+          <meshStandardMaterial color={highlightedPoint === p ? 'orange' : 'blue'} />
+        </mesh>
+      ))} */}
     </>
   );
 };

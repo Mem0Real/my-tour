@@ -6,10 +6,10 @@ export interface Children {
 
 export interface LoopPoint {
   pos: THREE.Vector3;
-  snappedWall?: [THREE.Vector3, THREE.Vector3];
+  snappedWall?: [THREE.Vector3, THREE.Vector3] | null;
 }
 
 export interface SnapResult {
   snappedPoint: THREE.Vector3;
-  snappedWall?: [THREE.Vector3, THREE.Vector3]
+  snappedWall?: [THREE.Vector3, THREE.Vector3] | null
 }
