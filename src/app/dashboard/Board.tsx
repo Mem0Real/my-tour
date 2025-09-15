@@ -58,13 +58,12 @@ export const Board = () => {
 
     const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
 
-    // Pass an array of Vector3 to snapToPoints
     const currentLoopPositions = currentLoop.map((p) => p.pos);
     const { snappedPoint, snappedWall } = snapToPoints(clicked, currentLoopPositions, allWalls, SNAP_TOLERANCE);
 
     const newPointData: LoopPoint = {
       pos: snappedPoint,
-      snappedWall: snappedWall || undefined,
+      snappedWall,
     };
 
     if (!isDrawing) {
@@ -108,14 +107,10 @@ export const Board = () => {
 
     // Flatten wall points
     const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
-
+    
     // Snap cursor to first point axis + other walls
-    const { snappedPoint } = snapToPoints(
-      cursor,
-      currentLoop.map((p) => p.pos),
-      allWalls,
-      SNAP_TOLERANCE
-    );
+    const currentLoopPositions = currentLoop.map((p) => p.pos);
+    const { snappedPoint } = snapToPoints(cursor, currentLoopPositions, allWalls, SNAP_TOLERANCE);
 
     // Straighten relative to last point
     if (currentLoop.length > 0) {
@@ -123,7 +118,7 @@ export const Board = () => {
       setPreviewPoint(straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD));
     } else setPreviewPoint(snappedPoint);
 
-    // setSnapCues([snapped]);
+    setSnapCues([snappedPoint]);
   };
 
   return (

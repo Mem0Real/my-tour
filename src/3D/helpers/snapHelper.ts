@@ -15,33 +15,41 @@ export const straighten = (from: THREE.Vector3, to: THREE.Vector3, straightThres
 
 export const snapToPoints = (
   cursor: THREE.Vector3,
-  points: THREE.Vector3[],
-  walls: [THREE.Vector3, THREE.Vector3][],
+  currentLoopPositions: THREE.Vector3[],
+  allWalls: [THREE.Vector3, THREE.Vector3][],
   tolerance: number
 ): SnapResult => {
-  // First, snap to points
-  for (let p of points) {
-    if (cursor.distanceTo(p) < tolerance) return { snappedPoint: p.clone() };
-  }
+  let snappedPoint = cursor.clone();
+  let snappedWall: [THREE.Vector3, THREE.Vector3] | undefined;
 
-  // Snap to wall axes
-  for (let [start, end] of walls) {
-    // Project cursor onto the wall line
-    const wallDir = new THREE.Vector3().subVectors(end, start).normalize();
-    const wallLen = wallDir.length();
+  // Snap to X/Z axis of existing points
+  [...currentLoopPositions, ...allWalls.flatMap(([a, b]) => [a, b])].forEach((p) => {
+    if (Math.abs(cursor.x - p.x) < tolerance) snappedPoint.x = p.x;
+    if (Math.abs(cursor.z - p.z) < tolerance) snappedPoint.z = p.z;
+  });
 
-    const startToCursor = new THREE.Vector3().subVectors(cursor, start);
-    const projection = startToCursor.dot(wallDir);
+  // Snap to walls
+  for (const wall of allWalls) {
+    const { start, end } = { start: wall[0], end: wall[1] };
 
-    // clamp projection to wall segment
-    const clamped = Math.max(0, Math.min(wallLen, projection));
-    const projectedPoint = start.clone().add(wallDir.multiplyScalar(clamped));
+    // Project cursor onto wall line
+    const wallDir = end.clone().sub(start);
+    const wallLength = wallDir.length();
 
-    if (cursor.distanceTo(projectedPoint) < tolerance) {
-      return { snappedPoint: projectedPoint, snappedWall: [start, end] };
+    if (wallLength === 0) continue;
+
+    const dirNormalized = wallDir.clone().normalize();
+    const projLength = cursor.clone().sub(start).dot(dirNormalized);
+
+    if (projLength < -tolerance || projLength > wallLength + tolerance) continue;
+
+    const projPoint = start.clone().add(dirNormalized.multiplyScalar(projLength));
+    if (projPoint.distanceTo(cursor) < tolerance) {
+      snappedPoint = projPoint;
+      snappedWall = wall;
+      break; // prioritize first wall hit
     }
   }
 
-  // No snap
-  return { snappedPoint: cursor };
+  return { snappedPoint, snappedWall };
 };
