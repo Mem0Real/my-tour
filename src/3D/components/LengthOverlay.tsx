@@ -9,9 +9,7 @@ interface LengthOverlayProps {
   visible?: boolean;
 }
 
-export const LengthOverlay: React.FC<LengthOverlayProps> = ({ start, end, thickness = 0.1, visible = true }) => {
-  if (!visible) return null;
-
+export const LengthOverlay: React.FC<LengthOverlayProps> = ({ start, end, thickness = 0.1, visible = false }) => {
   const dir = new THREE.Vector3().subVectors(end, start).normalize();
   const halfThick = thickness / 2;
 
@@ -29,18 +27,25 @@ export const LengthOverlay: React.FC<LengthOverlayProps> = ({ start, end, thickn
 
   return (
     <>
-      {/* Guideline */}
-      {/* <Line points={[start, end]} color={'yellow'} lineWidth={1} /> */}
+      {visible && (
+        <>
+          {/* Guideline 
+          <Line points={[start, end]} color={'yellow'} lineWidth={1} /> */}
 
-      {/* Start ticks */}
-      <Line
-        points={[start.clone().add(perp), start.clone().sub(perp)]}
-        color={'rgba(100, 100, 100, 0.4)'}
-        lineWidth={2}
-      />
-
-      {/* End ticks */}
-      <Line points={[end.clone().add(perp), end.clone().sub(perp)]} color={'rgba(100, 100, 100, 0.4)'} lineWidth={2} />
+          {/* Start ticks */}
+          <Line
+            points={[start.clone().add(perp), start.clone().sub(perp)]}
+            color={'rgba(100, 100, 100, 0.4)'}
+            lineWidth={2}
+          />
+          {/* End ticks */}
+          <Line
+            points={[end.clone().add(perp), end.clone().sub(perp)]}
+            color={'rgba(100, 100, 100, 0.4)'}
+            lineWidth={2}
+          />
+        </>
+      )}
 
       {/* Length text */}
       <Html

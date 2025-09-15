@@ -10,7 +10,7 @@ import { isDrawingAtom, wallsAtom } from '@/utils/atoms/drawing';
 import { Wall } from '@/3D/components/Wall';
 import { LengthOverlay } from '@/3D/components/LengthOverlay';
 
-import { straighten, getSnappedPoint, snapToPoints } from '@/3D/helpers/snapHelper';
+import { straighten, snapToPoints } from '@/3D/helpers/snapHelper';
 
 const WALL_THICKNESS = 0.1;
 const WALL_HEIGHT = 2.5;
@@ -46,27 +46,55 @@ export const Board = () => {
 
   const handleRightClick = (e: any) => e.stopPropagation();
 
+  const handleBoardMove = (e: any) => {
+    if (!e.point || !isDrawing) return;
+
+    const cursor = e.point.clone();
+    cursor.y = 0;
+
+    // Flatten wall points
+    const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+
+    // Snap cursor to first point axis + other walls
+    let snapped = snapToPoints(cursor, currentLoop, allWalls, SNAP_TOLERANCE);
+
+    // Straighten relative to last point
+    if (currentLoop.length > 0) {
+      const lastPoint = currentLoop[currentLoop.length - 1];
+      snapped = straighten(lastPoint, snapped, STRAIGHT_THRESHOLD);
+    }
+
+    setPreviewPoint(snapped);
+  };
+
   const handleBoardClick = (e: any) => {
     if (!e.point || e.button === 2 || insert !== 'wall') return;
 
-    let clicked = e.point.clone();
-    clicked.y = 0;
+    // Use already previewed point if it exists to avoid off-click issues
+    const newPoint = previewPoint
+      ? previewPoint.clone()
+      : (() => {
+          const clicked = e.point.clone();
+          clicked.y = 0;
 
-    // Snap to first point & all walls
-    const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
-    const snapped = snapToPoints(clicked, currentLoop, allWalls, SNAP_TOLERANCE);
+          const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+          let snapped = snapToPoints(clicked, currentLoop, allWalls, SNAP_TOLERANCE);
+
+          if (currentLoop.length > 0) {
+            const lastPoint = currentLoop[currentLoop.length - 1];
+            snapped = straighten(lastPoint, snapped, STRAIGHT_THRESHOLD);
+          }
+          return snapped;
+        })();
 
     if (!isDrawing) {
-      setCurrentLoop([snapped]);
+      setCurrentLoop([newPoint]);
       setIsDrawing(true);
       setPreviewPoint(null);
       return;
     }
 
     const firstPoint = currentLoop[0];
-    const lastPoint = currentLoop[currentLoop.length - 1];
-
-    const newPoint = straighten(lastPoint, clicked, STRAIGHT_THRESHOLD);
 
     // Auto-close loop if near first point
     if (newPoint.distanceTo(firstPoint) < SNAP_DISTANCE && currentLoop.length > 2) {
@@ -83,23 +111,6 @@ export const Board = () => {
 
     setCurrentLoop([...currentLoop, newPoint]);
     setPreviewPoint(null);
-  };
-
-  const handleBoardMove = (e: any) => {
-    if (!e.point || !isDrawing) return;
-
-    let cursor = e.point.clone();
-    cursor.y = 0;
-
-    const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
-    const snapped = snapToPoints(cursor, currentLoop, allWalls, SNAP_TOLERANCE);
-
-    if (currentLoop.length > 0) {
-      const lastPoint = currentLoop[currentLoop.length - 1];
-      setPreviewPoint(straighten(lastPoint, snapped, STRAIGHT_THRESHOLD));
-    } else {
-      setPreviewPoint(snapped);
-    }
   };
 
   return (
@@ -120,7 +131,10 @@ export const Board = () => {
 
       {/* Render finalized walls */}
       {walls.map(([start, end], i) => (
-        <Wall key={`wall-${i}`} start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} />
+        <React.Fragment key={`wall-${i}`}>
+          <Wall start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} />
+          <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />
+        </React.Fragment>
       ))}
 
       {/* Render current walls with preview */}
