@@ -80,10 +80,15 @@ export const Board = () => {
     // Straighten relative to last point
     newPointData.pos = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
 
-    // Auto-close if near first point or both ends snapped to walls
-    const bothEndsSnapped = !!firstPoint.snappedWall && !!newPointData.snappedWall;
+    // _____ Auto-close conditions ______ //
 
-    if ((newPointData.pos.distanceTo(firstPoint.pos) < SNAP_DISTANCE && currentLoop.length > 2) || bothEndsSnapped) {
+    // 1) Close if near first point (basic)
+    const nearFirst = newPointData.pos.distanceTo(firstPoint.pos) < SNAP_DISTANCE && currentLoop.length > 2;
+
+    // 2) Close if first & new point are both snapped to walls (can be different)
+    const bothEndsSnapped = firstPoint.snappedWall && newPointData.snappedWall;
+
+    if (nearFirst || bothEndsSnapped) {
       const newWalls = currentLoop
         .concat([newPointData])
         .map((p, i, arr) => [p.pos, arr[(i + 1) % arr.length].pos] as [THREE.Vector3, THREE.Vector3]);
@@ -107,7 +112,7 @@ export const Board = () => {
 
     // Flatten wall points
     const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
-    
+
     // Snap cursor to first point axis + other walls
     const currentLoopPositions = currentLoop.map((p) => p.pos);
     const { snappedPoint } = snapToPoints(cursor, currentLoopPositions, allWalls, SNAP_TOLERANCE);
@@ -116,9 +121,8 @@ export const Board = () => {
     if (currentLoop.length > 0) {
       const lastPoint = currentLoop[currentLoop.length - 1];
       setPreviewPoint(straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD));
+      setSnapCues([snappedPoint]);
     } else setPreviewPoint(snappedPoint);
-
-    setSnapCues([snappedPoint]);
   };
 
   return (
