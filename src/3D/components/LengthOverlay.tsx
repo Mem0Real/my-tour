@@ -10,6 +10,8 @@ interface LengthOverlayProps {
 }
 
 export const LengthOverlay: React.FC<LengthOverlayProps> = ({ start, end, thickness = 0.1, visible = false }) => {
+  if (end.distanceTo(start) < 0.005) return;
+
   const dir = new THREE.Vector3().subVectors(end, start).normalize();
   const halfThick = thickness / 2;
 

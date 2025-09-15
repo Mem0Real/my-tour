@@ -12,7 +12,7 @@ import { LengthOverlay } from '@/3D/components/LengthOverlay';
 import { SnapCues } from '@/3D/components/SnapCues';
 
 import { straighten, snapToPoints } from '@/3D/helpers/snapHelper';
-import { LoopPoint } from '@/utils/definitions';
+import { EndpointRef, LoopPoint } from '@/utils/definitions';
 
 const WALL_THICKNESS = 0.1;
 const WALL_HEIGHT = 2.5;
@@ -33,8 +33,9 @@ export const Board = () => {
   const [snapCues, setSnapCues] = useState<THREE.Vector3[]>([]);
 
   const [isShiftDown, setIsShiftDown] = useState(false);
-  const [hoveredEndpoint, setHoveredEndpoint] = useState<{ wallIndex: number; pointIndex: 0 | 1 } | null>(null);
-  const [editingEndPoint, setEditingPoint] = useState<{ wallIndex: number; pointIndex: 0 | 1 } | null>(null);
+
+  const [editingEndPoint, setEditingPoint] = useState<EndpointRef | null>(null);
+  const [hoveredEndpoint, setHoveredEndpoint] = useState<EndpointRef | null>(null);
 
   // Cursor change
   useEffect(() => {
@@ -136,48 +137,6 @@ export const Board = () => {
     setPreviewPoint(null);
   };
 
-  // const handleBoardMove = (e: any) => {
-  //   if (!e.point) return;
-
-  //   const cursor = e.point.clone();
-  //   cursor.y = 0;
-
-  //   // Edit mode
-  //   if (editingPoint) {
-  //     const updatedLoop = [...currentLoop];
-  //     updatedLoop[editingPoint.pointIndex] = {
-  //       ...updatedLoop[editingPoint.pointIndex],
-  //       pos: cursor,
-  //     };
-
-  //     setCurrentLoop(updatedLoop);
-  //     return;
-  //   }
-
-  //   // Highlight
-  //   if (insert === 'wall') {
-  //     const hovered = currentLoop.find((p) => p.pos.distanceTo(cursor) < SNAP_TOLERANCE);
-  //     setHighlightedPoint(hovered || null);
-  //   }
-
-  //   // Drawing Preview
-  //   if (isDrawing) {
-  //     // Flatten wall points
-  //     const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
-
-  //     // Snap cursor to first point axis + other walls
-  //     const currentLoopPositions = currentLoop.map((p) => p.pos);
-  //     const { snappedPoint } = snapToPoints(cursor, currentLoopPositions, allWalls, SNAP_TOLERANCE);
-
-  //     // Straighten relative to last point
-  //     if (currentLoop.length > 0) {
-  //       const lastPoint = currentLoop[currentLoop.length - 1];
-  //       setPreviewPoint(straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD));
-  //       setSnapCues([snappedPoint]);
-  //     } else setPreviewPoint(snappedPoint);
-  //   }
-  // };
-
   const handlePointerMove = (e: any) => {
     if (!e.point) return;
 
@@ -213,9 +172,10 @@ export const Board = () => {
   };
 
   const handleEndpointClick = (wallIndex: number, pointIndex: 0 | 1) => {
-    if (!isShiftDown) return;
+    if (!isShiftDown || editingEndPoint) return;
 
     setEditingPoint({ wallIndex: wallIndex, pointIndex: pointIndex });
+    // else handleBoardClick();
   };
 
   const handlePointerUp = (e: any) => {
@@ -245,18 +205,16 @@ export const Board = () => {
       {walls.map(([start, end], i) => (
         <React.Fragment key={`wall-${i}`}>
           <Wall
-            id={`wall-${i}`}
+            id={i}
             start={start}
             end={end}
             thickness={WALL_THICKNESS}
             height={WALL_HEIGHT}
-            onHoverEndpoint={(pointIndex) => {
-              setHoveredEndpoint(pointIndex !== null ? { wallIndex: i, pointIndex } : null);
-            }}
-            onClickEndpoint={(pointIndex) => handleEndpointClick(i, pointIndex)}
-            hoveredEndpoint={hoveredEndpoint && hoveredEndpoint.wallIndex === i ? hoveredEndpoint.pointIndex : null}
+            onHoverEndpoint={setHoveredEndpoint}
+            onClickEndpoint={({ wallIndex, pointIndex }) => handleEndpointClick(wallIndex, pointIndex)}
+            hoveredEndpoint={hoveredEndpoint}
           />
-          {i !== walls.length - 1 && <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />}
+          {<LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />}
         </React.Fragment>
       ))}
 
@@ -270,7 +228,7 @@ export const Board = () => {
         return (
           <React.Fragment key={`current-${i}`}>
             <Wall
-              id={`wall-${i}`}
+              id={i}
               start={start}
               end={end}
               thickness={WALL_THICKNESS}

@@ -15,7 +15,7 @@ export interface SnapResult {
 }
 
 export interface WallProps {
-  id: string;
+  id: number;
   start: THREE.Vector3;
   end: THREE.Vector3;
   thickness?: number;
@@ -23,7 +23,14 @@ export interface WallProps {
   dashed?: boolean;
   color?: string;
 
-  onHoverEndpoint?: (pointIndex: 0 | 1 | null) => void;
-  onClickEndpoint?: (pointIndex: 0 | 1) => void;
-  hoveredEndpoint?: 0 | 1 | null;
+  // callbacks
+  onHoverEndpoint?: (endPoint: EndpointRef | null) => void;
+  onClickEndpoint?: (endPoint: EndpointRef) => void;
+
+  hoveredEndpoint?: EndpointRef | null;
+}
+
+export interface EndpointRef {
+  wallIndex: number;
+  pointIndex: 0 | 1;
 }
