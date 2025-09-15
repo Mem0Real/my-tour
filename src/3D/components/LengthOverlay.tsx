@@ -33,17 +33,9 @@ export const LengthOverlay: React.FC<LengthOverlayProps> = ({ start, end, thickn
           <Line points={[start, end]} color={'yellow'} lineWidth={1} /> */}
 
           {/* Start ticks */}
-          <Line
-            points={[start.clone().add(perp), start.clone().sub(perp)]}
-            color={'rgba(100, 100, 100, 0.4)'}
-            lineWidth={2}
-          />
+          <Line points={[start.clone().add(perp), start.clone().sub(perp)]} color={'#444'} lineWidth={2} />
           {/* End ticks */}
-          <Line
-            points={[end.clone().add(perp), end.clone().sub(perp)]}
-            color={'rgba(100, 100, 100, 0.4)'}
-            lineWidth={2}
-          />
+          <Line points={[end.clone().add(perp), end.clone().sub(perp)]} color={'#444'} lineWidth={2} />
         </>
       )}
 

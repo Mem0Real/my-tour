@@ -9,6 +9,7 @@ import { isDrawingAtom, wallsAtom } from '@/utils/atoms/drawing';
 
 import { Wall } from '@/3D/components/Wall';
 import { LengthOverlay } from '@/3D/components/LengthOverlay';
+import { SnapCues } from '@/3D/components/SnapCues';
 
 import { straighten, snapToPoints } from '@/3D/helpers/snapHelper';
 
@@ -17,6 +18,7 @@ const WALL_HEIGHT = 2.5;
 const SNAP_DISTANCE = 0.3; // auto-close loop distance
 const STRAIGHT_THRESHOLD = 0.1;
 const SNAP_TOLERANCE = 0.3;
+const SNAP_CUE_SIZE = 0.15;
 
 export const Board = () => {
   const [hovered, setHovered] = useState(false);
@@ -27,6 +29,7 @@ export const Board = () => {
 
   const [currentLoop, setCurrentLoop] = useState<THREE.Vector3[]>([]);
   const [previewPoint, setPreviewPoint] = useState<THREE.Vector3 | null>(null);
+  const [snapCues, setSnapCues] = useState<THREE.Vector3[]>([]);
 
   useEffect(() => {
     document.body.style.cursor = insert === 'wall' && hovered ? 'url("/pencil.svg")0 24, auto' : 'auto';
@@ -65,6 +68,7 @@ export const Board = () => {
     }
 
     setPreviewPoint(snapped);
+    setSnapCues([snapped]);
   };
 
   const handleBoardClick = (e: any) => {
@@ -106,11 +110,13 @@ export const Board = () => {
       setCurrentLoop([]);
       setPreviewPoint(null);
       setIsDrawing(false);
+      setSnapCues([]);
       return;
     }
 
     setCurrentLoop([...currentLoop, newPoint]);
     setPreviewPoint(null);
+    setSnapCues([]);
   };
 
   return (
@@ -151,6 +157,9 @@ export const Board = () => {
           </React.Fragment>
         );
       })}
+
+      {/* Snap Cues */}
+      <SnapCues points={snapCues} />
     </>
   );
 };
