@@ -7,7 +7,7 @@ import { useAtomValue } from 'jotai';
 import { cameraTypeAtom } from '@/utils/atoms/ui';
 import { CameraTypes } from '@/utils/constants';
 
-export const Controller = ({ enablePan = true }) => {
+export const Controller = ({ enablePan = true, enableRotate = false }) => {
   const cameraType = useAtomValue(cameraTypeAtom);
   const orthographic = cameraType === CameraTypes.ORTHOGRAPHIC;
 
@@ -21,14 +21,14 @@ export const Controller = ({ enablePan = true }) => {
 
   return (
     <OrbitControls
-      enableRotate={!orthographic}
+      enableRotate={enableRotate || !orthographic}
       enablePan={enablePan}
       dampingFactor={0.7}
       zoomSpeed={3}
       panSpeed={0.5}
       mouseButtons={mouseButtons}
-      minZoom={2}
-      maxZoom={75}
+      minZoom={1}
+      maxZoom={20}
     />
   );
 };

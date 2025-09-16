@@ -25,7 +25,7 @@ export const Tab = () => {
           <button
             key={i}
             className={`px-3 py-2 bg-neutral-400 hover:cursor-pointer rounded-lg ${
-              tab === activeTab ? 'border border-neutral-500 shadow-inner drop-shadow-sm' : 'border-0'
+              tab === activeTab ? 'bg-blue-500 text-white' : ''
             }`}
             onClick={() => setActiveTab(tab)}
           >

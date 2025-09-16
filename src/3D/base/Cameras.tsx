@@ -1,31 +1,48 @@
-'use client';
-
+import { useThree } from '@react-three/fiber';
+import { OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
+import { useAtomValue } from 'jotai';
+import { useEffect } from 'react';
 import { cameraTypeAtom } from '@/utils/atoms/ui';
 import { CameraTypes } from '@/utils/constants';
-import { OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
-import { useThree } from '@react-three/fiber';
-import { useAtomValue } from 'jotai';
-import { MOUSE } from 'three';
 
 export const Cameras = () => {
-  const cameraType = useAtomValue(cameraTypeAtom);
-  const { size } = useThree();
+  const { size, camera } = useThree();
   const aspect = size.width / size.height;
-  const frustumSize = 50;
+
+  const cameraType = useAtomValue(cameraTypeAtom);
+
+  // For orthographic camera, make it responsive so that 1m sections appear approximately 60 pixels on screen
+  const thumbnailPixels = 60; // Approximate pixel size for thumbnail (based on average ~1.5cm at ~100 PPI)
+  const sectionSize = 1.0;
+  const basePixelPerUnit = thumbnailPixels / sectionSize;
+  const baseVisibleHeight = size.height / basePixelPerUnit;
+  const left = -baseVisibleHeight * aspect / 2;
+  const right = baseVisibleHeight * aspect / 2;
+  const top = baseVisibleHeight / 2;
+  const bottom = -baseVisibleHeight / 2;
+
+  useEffect(() => {
+    if (cameraType === CameraTypes.PERSPECTIVE) {
+      camera.position.set(5, 1.6, 5);
+      camera.lookAt(0, 1.6, 0);
+    } else {
+      camera.position.set(0, 10, 0);
+      camera.lookAt(0, 0, 0);
+    }
+  }, [camera, cameraType]);
 
   return cameraType === CameraTypes.PERSPECTIVE ? (
-    <PerspectiveCamera makeDefault fov={75} position={[0, 0, 5]} />
+    <PerspectiveCamera makeDefault fov={60} near={0.1} far={50} />
   ) : (
     <OrthographicCamera
       makeDefault
-      position={[0, 50, 0]} // High above the scene
-      zoom={5.2} // Adjust zoom for orthographic cameras
-      left={(-frustumSize * aspect) / 2}
-      right={(frustumSize * aspect) / 2}
-      top={frustumSize / 2}
-      bottom={-frustumSize / 2}
+      left={left}
+      right={right}
+      top={top}
+      bottom={bottom}
       near={0.1}
       far={100}
+      rotation={[-Math.PI / 2, 0, 0]}
     />
   );
 };

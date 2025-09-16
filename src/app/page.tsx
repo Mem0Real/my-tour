@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <div className='viewer-container'>
       <CanvasBase />
-      
+
       {/* <Three>
         <mesh>
           <sphereGeometry />
