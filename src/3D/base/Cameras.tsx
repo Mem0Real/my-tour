@@ -2,14 +2,14 @@
 
 import { cameraTypeAtom } from '@/utils/atoms/ui';
 import { CameraTypes } from '@/utils/constants';
-import { OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
+import { OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useAtomValue } from 'jotai';
+import { MOUSE } from 'three';
 
 export const Cameras = () => {
   const cameraType = useAtomValue(cameraTypeAtom);
   const { size } = useThree();
-
   const aspect = size.width / size.height;
   const frustumSize = 50;
 

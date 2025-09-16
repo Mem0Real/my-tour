@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 
 import { useAtomValue, useAtom } from 'jotai';
@@ -15,6 +15,8 @@ import { straighten, snapToPoints } from '@/3D/helpers/snapHelper';
 import { EndpointRef, LoopPoint } from '@/utils/definitions';
 import { WallJoints } from '@/3D/components/WallJoints';
 import { CameraTypes } from '@/utils/constants';
+import { useDebouncedCallback } from 'use-debounce';
+import { Controller } from '@/3D/base/Controller';
 
 const WALL_THICKNESS = 0.1;
 const WALL_HEIGHT = 2.5;
@@ -46,7 +48,7 @@ export const Board = () => {
     document.body.style.cursor = insert === 'wall' && hovered ? 'url("/pencil.svg")0 24, auto' : 'auto';
   }, [insert, hovered]);
 
-  // Esc exit current editing wall
+  // Keyboard functions
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
@@ -75,7 +77,15 @@ export const Board = () => {
   }, []);
 
   const handleRightClick = (e: any) => {
-    cameraType === CameraTypes.ORTHOGRAPHIC && e.stopPropagation();
+    e.stopPropagation();
+    if (editingEndPoint) {
+      setEditingPoint(null);
+      setSnapCues([]);
+    } else if (isDrawing && currentLoop.length > 0) {
+      setCurrentLoop((prev) => prev.slice(0, -1));
+      setPreviewPoint(null);
+      if (currentLoop.length <= 1) setIsDrawing(false);
+    }
   };
 
   const handleBoardClick = (e: any) => {
@@ -163,6 +173,7 @@ export const Board = () => {
     // --- DRAWING ---
     if (isDrawing) {
       const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+
       const { snappedPoint } = snapToPoints(
         cursor,
         currentLoop.map((p) => p.pos),
@@ -193,6 +204,8 @@ export const Board = () => {
 
   return (
     <>
+      <Controller enablePan={true} />
+
       {/* Invisible plane for raycast */}
       <mesh
         rotation-x={-Math.PI / 2}
@@ -223,15 +236,6 @@ export const Board = () => {
           {cameraType === CameraTypes.ORTHOGRAPHIC && (
             <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />
           )}
-
-          <WallJoints
-            walls={walls}
-            thickness={WALL_THICKNESS}
-            height={WALL_HEIGHT}
-            onHoverEndpoint={setHoveredEndpoint}
-            onClickEndpoint={({ wallIndex, pointIndex }) => handleEndpointClick(wallIndex, pointIndex)}
-            hoveredEndpoint={hoveredEndpoint}
-          />
         </React.Fragment>
       ))}
 
@@ -256,21 +260,22 @@ export const Board = () => {
             {i === currentLoop.length - 1 && previewPoint && (
               <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
             )}
-
-            <WallJoints
-              walls={walls}
-              thickness={WALL_THICKNESS}
-              height={WALL_HEIGHT}
-              onHoverEndpoint={setHoveredEndpoint}
-              onClickEndpoint={({ wallIndex, pointIndex }) => handleEndpointClick(wallIndex, pointIndex)}
-              hoveredEndpoint={hoveredEndpoint}
-            />
           </React.Fragment>
         );
       })}
 
       {/* Snap Cues */}
       <SnapCues points={snapCues} />
+
+      {/* Joint Points */}
+      <WallJoints
+        walls={walls}
+        thickness={WALL_THICKNESS}
+        height={WALL_HEIGHT}
+        onHoverEndpoint={setHoveredEndpoint}
+        onClickEndpoint={({ wallIndex, pointIndex }) => handleEndpointClick(wallIndex, pointIndex)}
+        hoveredEndpoint={hoveredEndpoint}
+      />
     </>
   );
 };
