@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 
 import { useAtom, useAtomValue } from 'jotai';
-import { activeTabAtom } from '@/utils/atoms/design';
+import { activeTabAtom } from '@/utils/atoms/ui';
 import { keysPressedAtom } from '@/utils/atoms/ui';
 
 const tabs = ['Add', 'Edit'];

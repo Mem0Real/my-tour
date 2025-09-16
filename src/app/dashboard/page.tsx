@@ -11,12 +11,14 @@ import { Controller } from '@/3D/base/Controller';
 import { ResponsiveGrid } from '@/3D/base/ResponsiveGrid';
 import { Cameras } from '@/3D/base/Cameras';
 import { Lights } from '@/3D/base/Lights';
+import { Platform } from '@/3D/dashboard/Platform';
 
 const Dashboard = () => {
   return (
     <div className={`w-full flex flex-col justify-center overflow-hidden`}>
       <Tab />
-      <Tools />
+      {/* <Tools /> */}
+      <Platform />
 
       <Three>
         {/* <Board /> */}
