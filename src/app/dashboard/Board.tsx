@@ -53,9 +53,18 @@ export const Board = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case 'Escape':
-          setCurrentLoop([]);
-          setPreviewPoint(null);
-          setIsDrawing(false);
+          // setCurrentLoop([]);
+          // setPreviewPoint(null);
+          // setIsDrawing(false);
+          if (editingEndPoint) {
+            setEditingPoint(null);
+            setSnapCues([]);
+            setPreviewPoint(null);
+          } else if (isDrawing && currentLoop.length > 0) {
+            setCurrentLoop((prev) => prev.slice(0, -1));
+            setPreviewPoint(null);
+            if (currentLoop.length <= 1) setIsDrawing(false);
+          }
           break;
         case 'Shift':
           setIsShiftDown(true);
@@ -74,18 +83,10 @@ export const Board = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [currentLoop]);
 
   const handleRightClick = (e: any) => {
     e.stopPropagation();
-    if (editingEndPoint) {
-      setEditingPoint(null);
-      setSnapCues([]);
-    } else if (isDrawing && currentLoop.length > 0) {
-      setCurrentLoop((prev) => prev.slice(0, -1));
-      setPreviewPoint(null);
-      if (currentLoop.length <= 1) setIsDrawing(false);
-    }
   };
 
   const handleBoardClick = (e: any) => {
