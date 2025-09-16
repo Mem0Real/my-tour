@@ -17,9 +17,10 @@ const Dashboard = () => {
     <div className={`w-full flex flex-col justify-center overflow-hidden`}>
       <Tab />
       <Tools />
+
       <Three>
         {/* <Board /> */}
-        <Controller enablePan={true} />
+        <Controller enablePan={true} enableRotate={true} />
         <Lights />
         <Cameras />
         <ResponsiveGrid />

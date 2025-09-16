@@ -1,47 +1,197 @@
-import React, { useEffect, useState } from 'react';
-import { useAtom, useSetAtom } from 'jotai';
-import { cursorTypeAtom, insertAtom, toolsCollapsedAtom } from '@/utils/atoms/ui';
-import { CursorTypes } from '@/utils/constants';
+'use client';
 
-const items = ['Wall', 'Door', 'Window'];
+import React, { useEffect, useState } from 'react';
+import * as THREE from 'three';
+
+import { Sidebar } from '@/app/dashboard/components/Sidebar';
+import { cameraTypeAtom, insertAtom } from '@/utils/atoms/ui';
+import { useAtom, useAtomValue } from 'jotai';
+import { isDrawingAtom, wallsAtom } from '@/utils/atoms/drawing';
+import { LoopPoint } from '@/utils/definitions';
+import { snapToPoints, straighten } from '@/3D/helpers/snapHelper';
+import { CameraTypes } from '@/utils/constants';
+import { Three } from '@/3D/base/Three';
+import { Wall } from '@/3D/dashboard/Wall';
+import { LengthOverlay } from '@/3D/dashboard/LengthOverlay';
+import { SnapCues } from '@/3D/dashboard/SnapCues';
+
+const WALL_THICKNESS = 0.1;
+const WALL_HEIGHT = 2.5;
+const SNAP_DISTANCE = 0.3;
+const STRAIGHT_THRESHOLD = 0.1;
+const SNAP_TOLERANCE = 0.3;
 
 export const AddInterface = () => {
-  const [insert, setInsert] = useAtom(insertAtom);
-  const [isCollapsed, setIsCollapsed] = useAtom(toolsCollapsedAtom);
+  const insert = useAtomValue(insertAtom);
+  const cameraType = useAtomValue(cameraTypeAtom);
 
-  const setCursor = useSetAtom(cursorTypeAtom);
+  const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
+  const [walls, setWalls] = useAtom(wallsAtom);
+
+  const [currentLoop, setCurrentLoop] = useState<LoopPoint[]>([]);
+  const [previewPoint, setPreviewPoint] = useState<THREE.Vector3 | null>(null);
+  const [snapCues, setSnapCues] = useState<THREE.Vector3[]>([]);
 
   useEffect(() => {
-    setCursor(insert ? CursorTypes.CROSS : CursorTypes.DEFAULT);
-  }, [insert]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'Escape':
+          if (isDrawing && currentLoop.length > 0) {
+            setCurrentLoop((prev) => prev.slice(0, -1));
+            setPreviewPoint(null);
+            if (currentLoop.length <= 1) setIsDrawing(false);
+          }
+          break;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentLoop]);
+
+  const handleBoardClick = (e: any) => {
+    if (!e.point || e.button === 2 || !insert) return;
+    if (cameraType === CameraTypes.PERSPECTIVE) return;
+
+    let clicked = e.point.clone();
+    clicked.y = 0;
+
+    const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+
+    const currentLoopPositions = currentLoop.map((p) => p.pos);
+    const { snappedPoint, snappedWall } = snapToPoints(clicked, currentLoopPositions, allWalls, SNAP_TOLERANCE);
+
+    const pointData: LoopPoint = {
+      pos: snappedPoint,
+      snappedWall,
+    };
+
+    if (!isDrawing) {
+      // Start new loop
+      setCurrentLoop([pointData]);
+      setIsDrawing(true);
+      setPreviewPoint(null);
+      return;
+    }
+
+    const firstPoint = currentLoop[0];
+    const lastPoint = currentLoop[currentLoop.length - 1];
+
+    // Straighten relative to last point
+    const newPos = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
+    const newPointData: LoopPoint = { pos: newPos, snappedWall: snappedWall || undefined };
+
+    // _____ Auto-close conditions ______ //
+    const nearFirstPoint = newPos.distanceTo(firstPoint.pos) < SNAP_DISTANCE && currentLoop.length > 2;
+    const bothEndsSnapped = !!firstPoint.snappedWall && !!newPointData.snappedWall;
+
+    // 1) Close if near first point (basic)
+    if (nearFirstPoint) {
+      const newWalls = currentLoop
+        .concat([newPointData])
+        .map((p, i, arr) => [p.pos, arr[(i + 1) % arr.length].pos] as [THREE.Vector3, THREE.Vector3]);
+
+      setWalls([...walls, ...newWalls]);
+      setCurrentLoop([]);
+      setPreviewPoint(null);
+      setIsDrawing(false);
+      return;
+    } else if (bothEndsSnapped) {
+      // 2) Close if first & new point are both snapped to walls (can be different)
+      const newWalls = currentLoop
+        .concat([newPointData])
+        .map((p, i, arr) => [p.pos, arr[i + 1]?.pos].filter(Boolean) as THREE.Vector3[])
+        .filter((seg) => seg.length === 2) as [THREE.Vector3, THREE.Vector3][];
+
+      setWalls([...walls, ...newWalls]);
+      setCurrentLoop([]);
+      setPreviewPoint(null);
+      setIsDrawing(false);
+      return;
+    }
+
+    // 3) Proceed normally
+    setCurrentLoop([...currentLoop, newPointData]);
+    setPreviewPoint(null);
+  };
+
+  const handlePointerMove = (e: any) => {
+    if (!e.point) return;
+
+    const cursor = e.point.clone();
+    cursor.y = 0;
+
+    // --- DRAWING ---
+    if (isDrawing) {
+      const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+
+      const { snappedPoint } = snapToPoints(
+        cursor,
+        currentLoop.map((p) => p.pos),
+        allWalls,
+        SNAP_TOLERANCE
+      );
+
+      const lastPoint = currentLoop[currentLoop.length - 1];
+      const straightened = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
+
+      setPreviewPoint(straightened);
+      setSnapCues([snappedPoint]);
+    }
+  };
 
   return (
-    <div className='fixed left-0 top-1/3 -translate-y-1/2 w-fit bg-neutral-200/40 shadow-lg shadow-neutral-600 border-r border-t border-neutral-500 text-neutral-900 rounded-r-sm transition-all duration-300 ease-in-out z-10 py-2'>
-      {/* Toggle Button */}
-      <button
-        className='absolute -right-8 top-2 rounded-r-lg p-2  bg-neutral-400 hover:bg-neutral-500 cursor-pointer'
-        onClick={() => setIsCollapsed(!isCollapsed)}
+    <>
+      <mesh
+        rotation-x={-Math.PI / 2}
+        position={[0, 0.01, 0]}
+        onPointerDown={handleBoardClick}
+        onPointerMove={handlePointerMove}
       >
-        {isCollapsed ? '→' : '←'}
-      </button>
+        <planeGeometry args={[1000, 1000]} />
+        <meshStandardMaterial transparent opacity={0} />
+      </mesh>
 
-      {/* Sidebar Content */}
-      <div className={`${isCollapsed ? 'w-0 p-0 overflow-hidden' : 'w-32 p-4'} transition-all duration-200`}>
-        <ul className='space-y-2'>
-          {items.map((item) => (
-            <li key={item}>
-              <button
-                className={`w-full text-left px-4 py-2 rounded-md transition-colors duration-200 cursor-pointer ${
-                  insert === item ? 'ring-2 ring-neutral-800/40 rounded-lg' : 'hover:bg-neutral-300'
-                }`}
-                onClick={() => setInsert((prev) => (prev === item ? '' : item))}
-              >
-                {item}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+      {/* Render finalized walls */}
+      {walls.map(([start, end], i) => (
+        <React.Fragment key={`wall-${i}`}>
+          <Wall id={i} start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} color={'white'} />
+
+          {cameraType === CameraTypes.ORTHOGRAPHIC && (
+            <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />
+          )}
+        </React.Fragment>
+      ))}
+
+      {/* Render current walls with preview */}
+      {currentLoop.map((pointData, i) => {
+        const start = pointData.pos;
+        const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1].pos;
+
+        if (!end) return null;
+
+        return (
+          <React.Fragment key={`current-${i}`}>
+            <Wall
+              id={i}
+              start={start}
+              end={end}
+              thickness={WALL_THICKNESS}
+              height={WALL_HEIGHT}
+              dashed
+              color='lightblue'
+            />
+            {i === currentLoop.length - 1 && previewPoint && (
+              <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
+            )}
+          </React.Fragment>
+        );
+      })}
+
+      {/* Snap Cues */}
+      <SnapCues points={snapCues} />
+    </>
   );
 };
