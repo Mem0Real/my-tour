@@ -10,54 +10,106 @@ interface LengthOverlayProps {
 }
 
 export const LengthOverlay: React.FC<LengthOverlayProps> = ({ start, end, thickness = 0.1, visible = false }) => {
-  if (end.distanceTo(start) < 0.005) return;
+  if (end.distanceTo(start) < 0.005) return null;
 
   const dir = new THREE.Vector3().subVectors(end, start).normalize();
-  const halfThick = thickness / 2;
+  const length = start.distanceTo(end) * 100; // Convert to cm, using raw distance
 
-  // Trim so that the rules are placed on the wall edges
-  const trimmedStart = start.clone().sub(dir.clone().multiplyScalar(halfThick));
-  const trimmedEnd = end.clone().add(dir.clone().multiplyScalar(halfThick));
+  // Perpendicular vector for guidelines and offsets
+  const offsetSize = 0.3;
+  const perp = new THREE.Vector3(-dir.z, 0, dir.x).normalize().multiplyScalar(offsetSize);
 
-  const mid = new THREE.Vector3().addVectors(trimmedStart, trimmedEnd).multiplyScalar(0.5);
+  // Determine if wall is horizontal or vertical
+  const isHorizontal = Math.abs(dir.x) > Math.abs(dir.z);
 
-  // Perpendicular vector for small ticks at the edges
-  const tickSize = 0.15;
-  const perp = new THREE.Vector3(-dir.z, 0, dir.x).normalize().multiplyScalar(tickSize * 2);
+  // Guideline points (use raw start/end, extend with perp)
+  const guidelineOuterStart = start.clone().add(perp);
+  const guidelineOuterEnd = end.clone().add(perp);
+  const guidelineInnerStart = start.clone().sub(perp);
+  const guidelineInnerEnd = end.clone().sub(perp);
 
-  const length = trimmedStart.distanceTo(trimmedEnd);
+  // Hook size and direction (perpendicular to wall)
+  const hookSize = 0.25;
+  const hookDir = new THREE.Vector3(-dir.z, 0, dir.x).normalize();
+
+  // Hooks at start and end for outer guideline
+  const outerStartHook1 = guidelineOuterStart.clone().add(hookDir.clone().multiplyScalar(hookSize / 8));
+  const outerStartHook2 = guidelineOuterStart.clone().sub(hookDir.clone().multiplyScalar(hookSize));
+  const outerEndHook1 = guidelineOuterEnd.clone().add(hookDir.clone().multiplyScalar(hookSize / 8));
+  const outerEndHook2 = guidelineOuterEnd.clone().sub(hookDir.clone().multiplyScalar(hookSize));
+
+  // Hooks at start and end for inner guideline
+  const innerStartHook1 = guidelineInnerStart.clone().add(hookDir.clone().multiplyScalar(hookSize));
+  const innerStartHook2 = guidelineInnerStart.clone().sub(hookDir.clone().multiplyScalar(hookSize / 8));
+  const innerEndHook1 = guidelineInnerEnd.clone().add(hookDir.clone().multiplyScalar(hookSize));
+  const innerEndHook2 = guidelineInnerEnd.clone().sub(hookDir.clone().multiplyScalar(hookSize / 8));
+
+  // Text positions (offset like lines)
+  const outerMid = new THREE.Vector3().addVectors(guidelineOuterStart, guidelineOuterEnd).multiplyScalar(0.5);
+  const innerMid = new THREE.Vector3().addVectors(guidelineInnerStart, guidelineInnerEnd).multiplyScalar(0.5);
+
+  // Text rotation (no flipping, content-aware)
+  const textRotation = isHorizontal ? '0deg' : '-90deg'; // Horizontal: 0deg, Vertical: -90deg (bottom to top)
 
   return (
     <>
-      {visible && (
-        <>
-          {/* Guideline 
-          <Line points={[start, end]} color={'yellow'} lineWidth={1} /> */}
+      <>
+        {/* Outer guideline */}
+        <Line points={[guidelineOuterStart, guidelineOuterEnd]} color={'#777'} lineWidth={2} />
+        {/* Outer hooks */}
+        <Line points={[outerStartHook1, outerStartHook2]} color={'#777'} lineWidth={2} />
+        <Line points={[outerEndHook1, outerEndHook2]} color={'#777'} lineWidth={2} />
 
-          {/* Start ticks */}
-          <Line points={[start.clone().add(perp), start.clone().sub(perp)]} color={'#444'} lineWidth={2} />
-          {/* End ticks */}
-          <Line points={[end.clone().add(perp), end.clone().sub(perp)]} color={'#444'} lineWidth={2} />
-        </>
-      )}
+        {/* Inner guideline */}
+        {visible && (
+          <>
+            <Line points={[guidelineInnerStart, guidelineInnerEnd]} color={'#777'} lineWidth={2} />
+            // Inner hooks
+            <Line points={[innerStartHook1, innerStartHook2]} color={'#777'} lineWidth={2} />
+            <Line points={[innerEndHook1, innerEndHook2]} color={'#777'} lineWidth={2} />
+          </>
+        )}
+      </>
 
-      {/* Length text */}
+      {/* Outer text */}
       <Html
-        position={[mid.x, 0.25, mid.z]} // slightly above the wall
+        position={outerMid}
         style={{
-          background: 'rgba(0,0,0,0.7)',
-          color: 'white',
-          padding: '2px 6px',
-          fontSize: '12px',
+          background: 'white',
+          color: '#1a1a1a',
+          padding: '2px 2px',
+          fontSize: '13px',
           borderRadius: '3px',
           whiteSpace: 'nowrap',
           userSelect: 'none',
           pointerEvents: 'none',
-          transform: 'translate(-50%, -50%)', // center the text
+          transform: `translate(-50%, -50%) rotate(${textRotation})`,
+          transformOrigin: 'center',
         }}
       >
         {length.toFixed(2)} cm
       </Html>
+
+      {/* Inner text */}
+      {visible && (
+        <Html
+          position={innerMid}
+          style={{
+            background: 'white',
+            color: '#1a1a1a',
+            padding: '2px 2px',
+            fontSize: '13px',
+            borderRadius: '3px',
+            whiteSpace: 'nowrap',
+            userSelect: 'none',
+            pointerEvents: 'none',
+            transform: `translate(-50%, -50%) rotate(${textRotation})`,
+            transformOrigin: 'center',
+          }}
+        >
+          {length.toFixed(2)} cm
+        </Html>
+      )}
     </>
   );
 };

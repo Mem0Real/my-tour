@@ -14,8 +14,7 @@ export const CanvasBase = ({ props, eventSource, eventPrefix }: any) => {
   return (
     <Canvas
       shadows
-      gl={{ antialias: false }}
-      className={`w-full h-full cursor-${cursorType || 'auto'}`} // Explicit w-full h-full
+      className={`w-full h-full cursor-${cursorType || 'auto'} antialiased`} // Explicit w-full h-full
       style={{ position: 'absolute', top: 0, left: 0 }} // Absolute to fill parent exactly
       {...props} // Forward any other props (e.g., eventSource, eventPrefix)
     >

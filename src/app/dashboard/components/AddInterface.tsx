@@ -31,6 +31,7 @@ export const AddInterface = () => {
   const [currentLoop, setCurrentLoop] = useState<LoopPoint[]>([]);
   const [previewPoint, setPreviewPoint] = useState<THREE.Vector3 | null>(null);
   const [snapCues, setSnapCues] = useState<THREE.Vector3[]>([]);
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -50,6 +51,16 @@ export const AddInterface = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [currentLoop]);
+
+  const handleRightClick = (e: any) => {
+    if (e.button !== 2 || e.repeat) return;
+
+    setDragging(true);
+  };
+
+  const handlePointerUp = (e: any) => {
+    if (e.button === 2) setDragging(false);
+  };
 
   const handleBoardClick = (e: any) => {
     if (!e.point || e.button === 2 || !insert) return;
@@ -118,7 +129,7 @@ export const AddInterface = () => {
   };
 
   const handlePointerMove = (e: any) => {
-    if (!e.point) return;
+    if (!e.point || dragging) return;
 
     const cursor = e.point.clone();
     cursor.y = 0;
@@ -147,8 +158,12 @@ export const AddInterface = () => {
       <mesh
         rotation-x={-Math.PI / 2}
         position={[0, 0.01, 0]}
-        onPointerDown={handleBoardClick}
+        onPointerDown={(e) => {
+          handleBoardClick(e);
+          handleRightClick(e);
+        }}
         onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
       >
         <planeGeometry args={[1000, 1000]} />
         <meshStandardMaterial transparent opacity={0} />
