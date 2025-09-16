@@ -6,3 +6,5 @@ export const cameraTypeAtom = atom<CameraTypes>(CameraTypes.ORTHOGRAPHIC);
 export const cursorTypeAtom = atom<string>(CursorTypes.DEFAULT);
 
 export const insertAtom = atom<string | null>(null);
+
+export const keysPressedAtom = atom<number>(0);

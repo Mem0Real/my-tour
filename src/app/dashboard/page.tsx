@@ -4,7 +4,9 @@ import { Common } from '@/3D/base/Common';
 import { Three } from '@/3D/base/Three';
 import { Grid } from '@react-three/drei';
 
-import { Board } from '@/app/dashboard/Board';
+import { Board } from '@/3D/dashboard/Board';
+import { Tools } from '@/app/dashboard/components/Tools';
+import { Tab } from '@/app/dashboard/components/Tab';
 
 const Dashboard = () => {
   return (
@@ -19,8 +21,9 @@ const Dashboard = () => {
           sectionThickness={1}
           infiniteGrid={true}
         />
-        <Board />
+        {/* <Board /> */}
       </Three>
+      <Tab />
       <Common />
     </div>
   );
