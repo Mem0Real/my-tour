@@ -11,7 +11,7 @@ import { Wall } from '@/3D/dashboard/Wall';
 import { LengthOverlay } from '@/3D/dashboard/LengthOverlay';
 import { SnapCues } from '@/3D/dashboard/SnapCues';
 
-import { straighten, snapToPoints } from '@/3D/helpers/snapHelper';
+import { straighten, snapToPoints } from '@/3D/helpers/wallHelper';
 import { EndpointRef, LoopPoint } from '@/utils/definitions';
 import { WallJoints } from '@/3D/dashboard/WallJoints';
 import { CameraTypes } from '@/utils/constants';

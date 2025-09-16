@@ -20,9 +20,9 @@ export interface WallProps {
   end: THREE.Vector3;
   thickness?: number;
   height?: number;
-  dashed?: boolean;
   color?: string;
   hovered?: boolean;
+  visible?: boolean;
 }
 
 export interface JointProps {
