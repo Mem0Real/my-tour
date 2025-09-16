@@ -1,56 +1,49 @@
 import { Three } from '@/3D/base/Three';
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
-import { Platform } from '@/3D/dashboard/Platform';
 import { cursorTypeAtom } from '@/utils/atoms/ui';
 import { CursorTypes } from '@/utils/constants';
+import { Children } from '@/utils/definitions';
 import { Html } from '@react-three/drei';
 import { useSetAtom } from 'jotai';
 import React, { useEffect } from 'react';
 
-export function EditInterface() {
+export function EditInterface({ children }: Children) {
   const setCursor = useSetAtom(cursorTypeAtom);
 
   useEffect(() => {
     setCursor(CursorTypes.POINTER);
-  }, []);
+  }, [setCursor]);
 
-  const handleClick = () => {
-    console.log('Click on edit');
+  // This will ONLY fire when the actual Html element is clicked
+  const handlePointerDown = (e: MouseEvent) => {
+    e.stopPropagation();
+    console.log('Click on edit Html', e);
   };
 
-  const handleRightClick = () => {
-    console.log('RMB on edit');
+  const handleRightClick = (e: MouseEvent) => {
+    e.stopPropagation();
+    console.log('Html onClick', e);
+  };
+
+  const handlePointerOver = (e: MouseEvent) => {
+    console.log('hovering Html', e);
   };
 
   const handlers = {
-    onPointerDown: handleClick,
-    onContextMenu: handleRightClick,
+    onPointerDown: handlePointerDown,
+    onPointerOver: handlePointerOver,
+    onRightClick: handleRightClick,
   };
 
   return (
-    <>
-      <ToolInputProvider value={handlers}>
-        <Three>
-          <Platform />
-          <Html
-            position={[0, 0, 0]}
-            style={{
-              background: 'white',
-              color: '#1a1a1a',
-              padding: '2px 2px',
-              fontSize: '13px',
-              borderRadius: '3px',
-              whiteSpace: 'nowrap',
-              userSelect: 'none',
-              pointerEvents: 'none',
-            }}
-            onPointerDown={handleClick}
-            onContextMenu={handleRightClick}
-          >
-            Hello from editing
-          </Html>
-        </Three>
-      </ToolInputProvider>
-    </>
+    <ToolInputProvider value={handlers}>
+      <Three>
+        {children}
+        <mesh onPointerDown={handlePointerDown} onClick={handlePointerDown} onPointerOver={handlePointerOver}>
+          <boxGeometry args={[0.5, 0.5, 0.5]} />
+          <meshBasicMaterial color={'lightblue'} />
+        </mesh>
+      </Three>
+    </ToolInputProvider>
   );
 }

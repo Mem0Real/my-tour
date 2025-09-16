@@ -23,6 +23,7 @@ export const Platform = () => {
         rotation-x={-Math.PI / 2}
         position={[0, 0.01, 0]}
         onPointerDown={(e) => {
+          console.log('[platform] click');
           onPointerDown?.(e);
           onRightClick?.(e);
         }}

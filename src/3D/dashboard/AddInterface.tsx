@@ -4,10 +4,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import * as THREE from 'three';
 
 import { cameraTypeAtom, insertAtom } from '@/utils/atoms/ui';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { isDrawingAtom, previewPointAtom, snapCuesAtom, wallsAtom } from '@/utils/atoms/drawing';
 
-import { LoopPoint } from '@/utils/definitions';
+import { Children, LoopPoint } from '@/utils/definitions';
 import { snapToPoints, straighten } from '@/3D/helpers/wallHelper';
 import {
   CameraTypes,
@@ -22,11 +22,9 @@ import { Wall } from '@/3D/dashboard/components/Wall';
 import { LengthOverlay } from '@/3D/dashboard/components/LengthOverlay';
 
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
-import { Platform } from '@/3D/dashboard/Platform';
-import { Sidebar } from '@/app/dashboard/components/Sidebar';
 import { Three } from '@/3D/base/Three';
 
-export const AddInterface = () => {
+export const AddInterface = ({ children }: Children) => {
   const [walls, setWalls] = useAtom(wallsAtom);
   const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
   const [previewPoint, setPreviewPoint] = useAtom(previewPointAtom);
@@ -49,7 +47,7 @@ export const AddInterface = () => {
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentLoop]);
+  }, [currentLoop, isDrawing]);
 
   const handleRightClick = (e: any) => {
     if (e?.button === 2 && !e.repeat) setDragging(true);
@@ -60,6 +58,8 @@ export const AddInterface = () => {
   };
 
   const handleBoardClick = (e: any) => {
+    console.log('[Board] click');
+
     if (!e?.point || e?.button === 2 || !insert || cameraType === CameraTypes.PERSPECTIVE) return;
 
     const clicked = e.point.clone();
@@ -139,7 +139,7 @@ export const AddInterface = () => {
       setPreviewPoint(straightened);
       setSnapCues([snappedPoint]);
     },
-    [isDrawing, dragging]
+    [isDrawing, dragging, currentLoop, walls, setPreviewPoint, setSnapCues]
   );
 
   const handlers = {
@@ -151,35 +151,30 @@ export const AddInterface = () => {
   };
 
   return (
-    <>
-      <ToolInputProvider value={handlers}>
-        <Sidebar />
-        <Three>
-          <Platform />
-          {currentLoop.map((pointData, i) => {
-            const start = pointData.pos;
-            const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1].pos;
-            if (!end) return null;
+    <ToolInputProvider value={handlers}>
+      {children}
+      {currentLoop.map((pointData, i) => {
+        const start = pointData.pos;
+        const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1].pos;
+        if (!end) return null;
 
-            return (
-              <React.Fragment key={`current-${i}`}>
-                <Wall
-                  id={i}
-                  start={start}
-                  end={end}
-                  thickness={WALL_THICKNESS}
-                  height={WALL_HEIGHT}
-                  color='lightblue'
-                  visible={currentLoop[i + 2] ? true : false}
-                />
-                {i === currentLoop.length - 1 && previewPoint && (
-                  <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
-                )}
-              </React.Fragment>
-            );
-          })}
-        </Three>
-      </ToolInputProvider>
-    </>
+        return (
+          <React.Fragment key={`current-${i}`}>
+            <Wall
+              id={i}
+              start={start}
+              end={end}
+              thickness={WALL_THICKNESS}
+              height={WALL_HEIGHT}
+              color='lightblue'
+              visible={currentLoop[i + 2] ? true : false}
+            />
+            {i === currentLoop.length - 1 && previewPoint && (
+              <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </ToolInputProvider>
   );
 };

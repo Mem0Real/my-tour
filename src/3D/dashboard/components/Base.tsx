@@ -8,11 +8,11 @@ import { Three } from '@/3D/base/Three';
 
 export const Base = () => {
   return (
-    <Three>
+    <>
       <Lights />
       <Cameras />
       <Controller enablePan={true} enableRotate={true} />
       <ResponsiveGrid />
-    </Three>
+    </>
   );
 };
