@@ -22,6 +22,7 @@ export interface WallProps {
   height?: number;
   dashed?: boolean;
   color?: string;
+  hovered?: boolean;
 }
 
 export interface JointProps {

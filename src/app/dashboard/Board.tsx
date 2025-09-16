@@ -27,7 +27,7 @@ export const Board = () => {
   const [hovered, setHovered] = useState(false);
 
   const insert = useAtomValue(insertAtom);
-  const cameraType = useAtomValue(cameraTypeAtom)
+  const cameraType = useAtomValue(cameraTypeAtom);
 
   const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
   const [walls, setWalls] = useAtom(wallsAtom);
@@ -80,7 +80,7 @@ export const Board = () => {
 
   const handleBoardClick = (e: any) => {
     if (!e.point || e.button === 2 || insert !== 'wall') return;
-    if(cameraType === CameraTypes.PERSPECTIVE) return;
+    if (cameraType === CameraTypes.PERSPECTIVE) return;
 
     let clicked = e.point.clone();
     clicked.y = 0;
@@ -179,9 +179,9 @@ export const Board = () => {
   };
 
   const handleEndpointClick = (wallIndex: number, pointIndex: 0 | 1) => {
-    if (!isShiftDown || editingEndPoint) return;
+    if (!isShiftDown) return;
+    setEditingPoint({ wallIndex, pointIndex });
 
-    setEditingPoint({ wallIndex: wallIndex, pointIndex: pointIndex });
     // else handleBoardClick();
   };
 
@@ -211,9 +211,18 @@ export const Board = () => {
       {/* Render finalized walls */}
       {walls.map(([start, end], i) => (
         <React.Fragment key={`wall-${i}`}>
-          <Wall id={i} start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} />
+          <Wall
+            id={i}
+            start={start}
+            end={end}
+            thickness={WALL_THICKNESS}
+            height={WALL_HEIGHT}
+            color={hoveredEndpoint?.wallIndex === i ? 'lightblue' : 'white'}
+          />
 
-          {/* <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} /> */}
+          {cameraType === CameraTypes.ORTHOGRAPHIC && (
+            <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />
+          )}
 
           <WallJoints
             id={i}

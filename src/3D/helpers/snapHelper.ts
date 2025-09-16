@@ -53,14 +53,3 @@ export const snapToPoints = (
 
   return { snappedPoint, snappedWall };
 };
-
-export const makeTriangleGeometry = (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3) => {
-  const geometry = new THREE.BufferGeometry();
-  const vertices = new Float32Array([a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z]);
-
-  geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-  geometry.setIndex([0, 1, 2]);
-  geometry.computeVertexNormals();
-
-  return geometry;
-};

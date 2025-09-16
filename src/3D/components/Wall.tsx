@@ -12,6 +12,7 @@ export const Wall: FC<WallProps> = ({
   height = 2.5,
   dashed = false,
   color = 'white',
+  hovered
 }: WallProps) => {
   const mid = useMemo(() => new THREE.Vector3().lerpVectors(start, end, 0.5), [start, end]);
   const dir = useMemo(() => new THREE.Vector3().subVectors(end, start).setY(0), [start, end]);
