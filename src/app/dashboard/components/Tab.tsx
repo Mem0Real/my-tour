@@ -3,13 +3,13 @@
 import React, { useEffect } from 'react';
 
 import { useAtom, useAtomValue } from 'jotai';
-import { activeTabAtom } from '@/utils/atoms/ui';
+import { activeToolAtom } from '@/utils/atoms/ui';
 import { keysPressedAtom } from '@/utils/atoms/ui';
 
 const tabs = ['Add', 'Edit'];
 
 export const Tab = () => {
-  const [activeTab, setActiveTab] = useAtom(activeTabAtom);
+  const [activeTab, setActiveTab] = useAtom(activeToolAtom);
   const keysPressed = useAtomValue(keysPressedAtom);
 
   // Keyboard shortcut to switch between tabs (Alt + 1, 2 ...)

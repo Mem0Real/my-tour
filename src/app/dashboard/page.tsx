@@ -1,33 +1,39 @@
 'use client';
 
-import { Common } from '@/3D/base/Common';
-import { Three } from '@/3D/base/Three';
-import { Grid } from '@react-three/drei';
+import { useAtom } from 'jotai';
+import { activeToolAtom } from '@/utils/atoms/ui';
 
-import { Board } from '@/3D/dashboard/Board';
-import { Tools } from '@/app/dashboard/components/Tools';
 import { Tab } from '@/app/dashboard/components/Tab';
-import { Controller } from '@/3D/base/Controller';
-import { ResponsiveGrid } from '@/3D/base/ResponsiveGrid';
-import { Cameras } from '@/3D/base/Cameras';
-import { Lights } from '@/3D/base/Lights';
-import { Platform } from '@/3D/dashboard/Platform';
+import { Base } from '@/3D/dashboard/components/Base';
+import { Sidebar } from '@/app/dashboard/components/Sidebar';
+import { AddInterface } from '@/3D/dashboard/AddInterface';
+import { EditInterface } from '@/3D/dashboard/EditInterface';
 
 const Dashboard = () => {
-  return (
-    <div className={`w-full flex flex-col justify-center overflow-hidden`}>
-      <Tab />
-      {/* <Tools /> */}
-      <Platform />
+  const [activeTool] = useAtom(activeToolAtom);
 
-      <Three>
-        {/* <Board /> */}
-        <Controller enablePan={true} enableRotate={true} />
-        <Lights />
-        <Cameras />
-        <ResponsiveGrid />
-      </Three>
-    </div>
+  const ActiveInterface = () => {
+    switch (activeTool) {
+      case 'Add':
+        return (
+          <>
+            <Sidebar />
+            <AddInterface />
+          </>
+        );
+      case 'Edit':
+        return <EditInterface />;
+      default:
+        return;
+    }
+  };
+
+  return (
+    <>
+      <Tab />
+      <Base />
+      <ActiveInterface />
+    </>
   );
 };
 

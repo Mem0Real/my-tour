@@ -11,4 +11,4 @@ export const keysPressedAtom = atom<number>(0);
 
 export const toolsCollapsedAtom = atom<boolean>(false);
 
-export const activeTabAtom = atom<string>('Add');
+export const activeToolAtom = atom<string>('Add');

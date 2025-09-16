@@ -40,3 +40,12 @@ export interface EndpointRef {
   pointIndex: 0 | 1;
   pos: THREE.Vector3 | null;
 }
+
+
+export type ToolHandlers = {
+  onPointerDown?: (e: any) => void;
+  onPointerMove?: (e: any) => void;
+  onPointerUp?: (e: any) => void;
+  onRightClick?: (e: any) => void;
+  onKeyDown?: (e: KeyboardEvent) => void;
+};

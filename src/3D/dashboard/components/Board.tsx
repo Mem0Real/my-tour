@@ -7,13 +7,13 @@ import { useAtomValue, useAtom } from 'jotai';
 import { cameraTypeAtom, insertAtom } from '@/utils/atoms/ui';
 import { isDrawingAtom, wallsAtom } from '@/utils/atoms/drawing';
 
-import { Wall } from '@/3D/dashboard/Wall';
-import { LengthOverlay } from '@/3D/dashboard/LengthOverlay';
-import { SnapCues } from '@/3D/dashboard/SnapCues';
+import { Wall } from '@/3D/dashboard/components/Wall';
+import { LengthOverlay } from '@/3D/dashboard/components/LengthOverlay';
+import { SnapCues } from '@/3D/dashboard/components/SnapCues';
 
 import { straighten, snapToPoints } from '@/3D/helpers/wallHelper';
 import { EndpointRef, LoopPoint } from '@/utils/definitions';
-import { WallJoints } from '@/3D/dashboard/WallJoints';
+import { WallJoints } from '@/3D/dashboard/components/WallJoints';
 import { CameraTypes } from '@/utils/constants';
 import { useDebouncedCallback } from 'use-debounce';
 import { Controller } from '@/3D/base/Controller';

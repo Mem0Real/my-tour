@@ -17,16 +17,14 @@ import {
   WALL_HEIGHT,
   WALL_THICKNESS,
 } from '@/utils/constants';
-import { Wall } from '@/3D/dashboard/Wall';
-import { LengthOverlay } from '@/3D/dashboard/LengthOverlay';
 
-import {
-  onPointerDownAtom,
-  onPointerMoveAtom,
-  onPointerUpAtom,
-  onRightClick,
-  onKeyDownAtom,
-} from '@/utils/atoms/sceneHandlers';
+import { Wall } from '@/3D/dashboard/components/Wall';
+import { LengthOverlay } from '@/3D/dashboard/components/LengthOverlay';
+
+import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
+import { Platform } from '@/3D/dashboard/Platform';
+import { Sidebar } from '@/app/dashboard/components/Sidebar';
+import { Three } from '@/3D/base/Three';
 
 export const AddInterface = () => {
   const [walls, setWalls] = useAtom(wallsAtom);
@@ -40,12 +38,6 @@ export const AddInterface = () => {
 
   const [currentLoop, setCurrentLoop] = useState<LoopPoint[]>([]);
   const [dragging, setDragging] = useState(false);
-
-  const setPointerDown = useSetAtom(onPointerDownAtom);
-  const setPointerMove = useSetAtom(onPointerMoveAtom);
-  const setPointerUp = useSetAtom(onPointerUpAtom);
-  const setRightClick = useSetAtom(onRightClick);
-  const setKeyDown = useSetAtom(onKeyDownAtom);
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && isDrawing && currentLoop.length > 0) {
@@ -150,43 +142,44 @@ export const AddInterface = () => {
     [isDrawing, dragging]
   );
 
-  useEffect(() => {
-    setPointerDown(() => handleBoardClick);
-    setPointerMove(() => handlePointerMove);
-    setPointerUp(() => handlePointerUp);
-    setRightClick(() => handleRightClick);
-    setKeyDown(() => handleKeyDown);
+  const handlers = {
+    onPointerDown: handleBoardClick,
+    onPointerUp: handlePointerUp,
+    onPointerMove: handlePointerMove,
+    onRightClick: handleRightClick,
+    onKeyDown: handleKeyDown,
+  };
 
-    return () => {
-      // Clear handlers when unmounted
-      setPointerDown(null);
-      setPointerMove(null);
-      setPointerUp(null);
-      setRightClick(null);
-      setKeyDown(null);
-    };
-  }, []);
+  return (
+    <>
+      <ToolInputProvider value={handlers}>
+        <Sidebar />
+        <Three>
+          <Platform />
+          {currentLoop.map((pointData, i) => {
+            const start = pointData.pos;
+            const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1].pos;
+            if (!end) return null;
 
-  return currentLoop.map((pointData, i) => {
-    const start = pointData.pos;
-    const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1].pos;
-    if (!end) return null;
-
-    return (
-      <React.Fragment key={`current-${i}`}>
-        <Wall
-          id={i}
-          start={start}
-          end={end}
-          thickness={WALL_THICKNESS}
-          height={WALL_HEIGHT}
-          color='lightblue'
-          visible={currentLoop[i + 2] ? true : false}
-        />
-        {i === currentLoop.length - 1 && previewPoint && (
-          <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
-        )}
-      </React.Fragment>
-    );
-  });
+            return (
+              <React.Fragment key={`current-${i}`}>
+                <Wall
+                  id={i}
+                  start={start}
+                  end={end}
+                  thickness={WALL_THICKNESS}
+                  height={WALL_HEIGHT}
+                  color='lightblue'
+                  visible={currentLoop[i + 2] ? true : false}
+                />
+                {i === currentLoop.length - 1 && previewPoint && (
+                  <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </Three>
+      </ToolInputProvider>
+    </>
+  );
 };
