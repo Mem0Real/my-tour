@@ -4,6 +4,7 @@ import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { cameraTypeAtom } from '@/utils/atoms/ui';
 import { CameraTypes } from '@/utils/constants';
+import useMeasure from 'react-use-measure';
 
 export const Cameras = () => {
   const { size, camera } = useThree();
@@ -12,12 +13,12 @@ export const Cameras = () => {
   const cameraType = useAtomValue(cameraTypeAtom);
 
   // For orthographic camera, make it responsive so that 1m sections appear approximately 60 pixels on screen
-  const thumbnailPixels = 60; // Approximate pixel size for thumbnail (based on average ~1.5cm at ~100 PPI)
+  const thumbnailPixels = 90; // Approximate pixel size for thumbnail (based on average ~1.5cm at ~100 PPI)
   const sectionSize = 1.0;
   const basePixelPerUnit = thumbnailPixels / sectionSize;
   const baseVisibleHeight = size.height / basePixelPerUnit;
-  const left = -baseVisibleHeight * aspect / 2;
-  const right = baseVisibleHeight * aspect / 2;
+  const left = (-baseVisibleHeight * aspect) / 2;
+  const right = (baseVisibleHeight * aspect) / 2;
   const top = baseVisibleHeight / 2;
   const bottom = -baseVisibleHeight / 2;
 
@@ -43,6 +44,7 @@ export const Cameras = () => {
       near={0.1}
       far={100}
       rotation={[-Math.PI / 2, 0, 0]}
+      manual
     />
   );
 };

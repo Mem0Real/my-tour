@@ -72,16 +72,31 @@ export const AddInterface = () => {
 
     const firstPoint = currentLoop[0];
     const lastPoint = currentLoop[currentLoop.length - 1];
+    // Straighten relative to last point
     const newPos = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
     const newPointData: LoopPoint = { pos: newPos, snappedWall: snappedWall || undefined };
 
+    // _____ Auto-close conditions ______ //
     const nearFirstPoint = newPos.distanceTo(firstPoint.pos) < SNAP_DISTANCE && currentLoop.length > 2;
     const bothEndsSnapped = !!firstPoint.snappedWall && !!newPointData.snappedWall;
 
-    if (nearFirstPoint || bothEndsSnapped) {
+    // 1) Close if near first point (basic)
+    if (nearFirstPoint) {
       const newWalls = currentLoop
         .concat([newPointData])
         .map((p, i, arr) => [p.pos, arr[(i + 1) % arr.length].pos] as [THREE.Vector3, THREE.Vector3]);
+
+      setWalls([...walls, ...newWalls]);
+      setCurrentLoop([]);
+      setPreviewPoint(null);
+      setIsDrawing(false);
+      return;
+    } else if (bothEndsSnapped) {
+      // 2) Close if first & new point are both snapped to walls (can be different)
+      const newWalls = currentLoop
+        .concat([newPointData])
+        .map((p, i, arr) => [p.pos, arr[i + 1]?.pos].filter(Boolean) as THREE.Vector3[])
+        .filter((seg) => seg.length === 2) as [THREE.Vector3, THREE.Vector3][];
 
       setWalls([...walls, ...newWalls]);
       setCurrentLoop([]);
