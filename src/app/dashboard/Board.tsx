@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import * as THREE from 'three';
 
 import { useAtomValue, useAtom } from 'jotai';
-import { insertAtom } from '@/utils/atoms/ui';
+import { cameraTypeAtom, insertAtom } from '@/utils/atoms/ui';
 import { isDrawingAtom, wallsAtom } from '@/utils/atoms/drawing';
 
 import { Wall } from '@/3D/components/Wall';
@@ -13,6 +13,8 @@ import { SnapCues } from '@/3D/components/SnapCues';
 
 import { straighten, snapToPoints } from '@/3D/helpers/snapHelper';
 import { EndpointRef, LoopPoint } from '@/utils/definitions';
+import { WallJoints } from '@/3D/components/WallJoints';
+import { CameraTypes } from '@/utils/constants';
 
 const WALL_THICKNESS = 0.1;
 const WALL_HEIGHT = 2.5;
@@ -25,6 +27,8 @@ export const Board = () => {
   const [hovered, setHovered] = useState(false);
 
   const insert = useAtomValue(insertAtom);
+  const cameraType = useAtomValue(cameraTypeAtom)
+
   const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
   const [walls, setWalls] = useAtom(wallsAtom);
 
@@ -70,10 +74,13 @@ export const Board = () => {
     };
   }, []);
 
-  const handleRightClick = (e: any) => e.stopPropagation();
+  const handleRightClick = (e: any) => {
+    cameraType === CameraTypes.ORTHOGRAPHIC && e.stopPropagation();
+  };
 
   const handleBoardClick = (e: any) => {
     if (!e.point || e.button === 2 || insert !== 'wall') return;
+    if(cameraType === CameraTypes.PERSPECTIVE) return;
 
     let clicked = e.point.clone();
     clicked.y = 0;
@@ -204,7 +211,11 @@ export const Board = () => {
       {/* Render finalized walls */}
       {walls.map(([start, end], i) => (
         <React.Fragment key={`wall-${i}`}>
-          <Wall
+          <Wall id={i} start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} />
+
+          {/* <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} /> */}
+
+          <WallJoints
             id={i}
             start={start}
             end={end}
@@ -214,7 +225,6 @@ export const Board = () => {
             onClickEndpoint={({ wallIndex, pointIndex }) => handleEndpointClick(wallIndex, pointIndex)}
             hoveredEndpoint={hoveredEndpoint}
           />
-          {<LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />}
         </React.Fragment>
       ))}
 
@@ -239,6 +249,17 @@ export const Board = () => {
             {i === currentLoop.length - 1 && previewPoint && (
               <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
             )}
+
+            <WallJoints
+              id={i}
+              start={start}
+              end={end}
+              thickness={WALL_THICKNESS}
+              height={WALL_HEIGHT}
+              onHoverEndpoint={setHoveredEndpoint}
+              onClickEndpoint={({ wallIndex, pointIndex }) => handleEndpointClick(wallIndex, pointIndex)}
+              hoveredEndpoint={hoveredEndpoint}
+            />
           </React.Fragment>
         );
       })}

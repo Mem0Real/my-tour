@@ -22,11 +22,17 @@ export interface WallProps {
   height?: number;
   dashed?: boolean;
   color?: string;
+}
 
-  // callbacks
+export interface JointProps {
+  id: number;
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+  thickness?: number;
+  height?: number;
+
   onHoverEndpoint?: (endPoint: EndpointRef | null) => void;
   onClickEndpoint?: (endPoint: EndpointRef) => void;
-
   hoveredEndpoint?: EndpointRef | null;
 }
 

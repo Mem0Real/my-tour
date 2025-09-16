@@ -5,19 +5,25 @@ import { Lights } from '@/3D/base/Lights';
 import { OrbitControls, Wireframe } from '@react-three/drei';
 import { MOUSE } from 'three';
 import { Three } from '@/3D/base/Three';
+import { useAtomValue } from 'jotai';
+import { cameraTypeAtom } from '@/utils/atoms/ui';
+import { CameraTypes } from '@/utils/constants';
 
 export const Common = () => {
+  const cameraType = useAtomValue(cameraTypeAtom);
+  const orthographic = cameraType === CameraTypes.ORTHOGRAPHIC;
+
   return (
     <Three>
       <Lights />
       <Cameras />
 
       <OrbitControls
-        enableRotate={false}
+        enableRotate={!orthographic}
         dampingFactor={0.7}
         zoomSpeed={3}
         panSpeed={0.5}
-        mouseButtons={{ LEFT: MOUSE.PAN, RIGHT: MOUSE.PAN }}
+        mouseButtons={{ LEFT: MOUSE.PAN, RIGHT: orthographic ? MOUSE.PAN : MOUSE.ROTATE }}
         minZoom={2}
         maxZoom={75}
       />
