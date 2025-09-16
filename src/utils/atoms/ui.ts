@@ -8,3 +8,5 @@ export const cursorTypeAtom = atom<string>(CursorTypes.DEFAULT);
 export const insertAtom = atom<string | null>(null);
 
 export const keysPressedAtom = atom<number>(0);
+
+export const toolsCollapsedAtom = atom<boolean>(false);

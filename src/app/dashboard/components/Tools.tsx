@@ -10,5 +10,13 @@ import { AddInterface } from '@/app/dashboard/components/AddInterface';
 export const Tools = () => {
   const activeTab = useAtomValue(activeTabAtom);
 
-  return activeTab === 'Add' ? <AddInterface /> : <EditInterface />;
+  switch (activeTab) {
+    case 'Add':
+      return <AddInterface />;
+    case 'Edit':
+      return <EditInterface />;
+
+    default:
+      return;
+  }
 };

@@ -19,13 +19,13 @@ export const Tab = () => {
   }, [keysPressed]);
 
   return (
-    <div className='absolute top-0 left-0 z-10 w-fit px-4 py-2 rounded-lg mt-5 ms-5 bg-neutral-200/80 text-neutral-900'>
+    <div className='absolute top-0 left-0 z-10 w-fit px-4 py-2 pt-4 rounded-b-2xl mt-5 ms-5 bg-neutral-200/40 shadow-inner shadow-neutral-500/80  text-neutral-900 transition-all duration-300 ease-in-out'>
       <div className='flex gap-4 items-center'>
         {tabs.map((tab, i) => (
           <button
             key={i}
-            className={`px-3 py-2 bg-neutral-400 hover:cursor-pointer rounded-lg ${
-              tab === activeTab ? 'bg-blue-500 text-white' : ''
+            className={`px-3 py-2 hover:cursor-pointer rounded-md ${
+              tab === activeTab ? 'ring-2 ring-neutral-800/40 rounded-lg' : 'hover:bg-neutral-300'
             }`}
             onClick={() => setActiveTab(tab)}
           >

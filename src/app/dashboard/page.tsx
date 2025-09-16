@@ -18,15 +18,6 @@ const Dashboard = () => {
       <Tab />
       <Tools />
       <Three>
-        {/* <Grid
-          renderOrder={-1}
-          position={[0, -0.01, 0]}
-          cellSize={1}
-          sectionSize={1}
-          sectionColor={'#D0D0CF'}
-          sectionThickness={1}
-          infiniteGrid={true}
-        /> */}
         {/* <Board /> */}
         <Controller enablePan={true} />
         <Lights />
