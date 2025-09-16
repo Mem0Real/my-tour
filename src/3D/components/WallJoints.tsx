@@ -1,50 +1,71 @@
 import * as THREE from 'three';
 import React, { useMemo } from 'react';
-import { JointProps } from '@/utils/definitions';
+import { JointProps, EndpointRef } from '@/utils/definitions';
+import { useSetAtom } from 'jotai';
+import { cursorTypeAtom } from '@/utils/atoms/ui';
+import { CursorTypes } from '@/utils/constants';
 
 export const WallJoints = ({
-  id,
-  start,
-  end,
+  walls,
   thickness = 0.1,
   height = 2.5,
-
   onHoverEndpoint,
   onClickEndpoint,
-
   hoveredEndpoint,
 }: JointProps) => {
-  const squareGeometry = useMemo(() => new THREE.PlaneGeometry(thickness, thickness), [thickness]);
-  const isHovered = (index: 0 | 1) => hoveredEndpoint?.wallIndex === id && hoveredEndpoint?.pointIndex === index;
+  const setCursor = useSetAtom(cursorTypeAtom);
 
-  const yOffset = height + 0.01 + id * 0.001; // small per-wall offset
-  const startPos = [start.x, yOffset, start.z] as [number, number, number];
-  const endPos = [end.x, yOffset, end.z] as [number, number, number];
+  // Create hitboxes for each wall's start and end points with offsets
+  const endpoints = useMemo(() => {
+    const points: { wallIndex: number; pointIndex: 0 | 1; pos: THREE.Vector3; offset: THREE.Vector3 }[] = [];
+    walls.forEach(([start, end], wallIndex) => {
+      // Calculate wall direction for offset
+      const dir = new THREE.Vector3().subVectors(end, start).normalize();
+      const offsetMagnitude = thickness; // Small offset, half the wall thickness
+      const startOffset = dir.clone().multiplyScalar(-offsetMagnitude); // Offset inward from start
+      const endOffset = dir.clone().multiplyScalar(offsetMagnitude); // Offset inward from end
+
+      points.push({
+        wallIndex,
+        pointIndex: 0,
+        pos: start.clone().add(startOffset),
+        offset: startOffset,
+      });
+      points.push({
+        wallIndex,
+        pointIndex: 1,
+        pos: end.clone().add(endOffset),
+        offset: endOffset,
+      });
+    });
+    return points;
+  }, [walls, thickness]);
 
   return (
-    <group>
-      <mesh
-        geometry={squareGeometry}
-        position={startPos}
-        rotation={[-Math.PI / 2, 0, 0]} // lay flat on XZ plane
-        onPointerOver={() => onHoverEndpoint?.({ wallIndex: id, pointIndex: 0 })}
-        onPointerOut={() => onHoverEndpoint?.(null)}
-        onClick={() => onClickEndpoint?.({ wallIndex: id, pointIndex: 0 })}
-      >
-        <meshStandardMaterial color={'yellow'} visible={isHovered(0)} side={THREE.DoubleSide} />
-      </mesh>
+    <>
+      {endpoints.map(({ wallIndex, pointIndex, pos }, idx) => {
+        const isHovered = hoveredEndpoint?.wallIndex === wallIndex && hoveredEndpoint?.pointIndex === pointIndex;
 
-      {/* End endpoint square */}
-      <mesh
-        geometry={squareGeometry}
-        position={endPos}
-        rotation={[-Math.PI / 2, 0, 0]}
-        onPointerOver={() => onHoverEndpoint?.({ wallIndex: id, pointIndex: 1 })}
-        onPointerOut={() => onHoverEndpoint?.(null)}
-        onClick={() => onClickEndpoint?.({ wallIndex: id, pointIndex: 1 })}
-      >
-        <meshStandardMaterial color={'yellow'} visible={isHovered(1)} side={THREE.DoubleSide} />
-      </mesh>
-    </group>
+        return (
+          <mesh
+            key={`endpoint-${wallIndex}-${pointIndex}`}
+            position={[pos.x, height + 0.01, pos.z]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            onPointerOver={() => {
+              onHoverEndpoint?.({ wallIndex, pointIndex, pos: walls[wallIndex][pointIndex] });
+              setCursor(CursorTypes.GRAB);
+            }}
+            onPointerOut={() => {
+              onHoverEndpoint?.(null);
+              setCursor(CursorTypes.PENCIL);
+            }}
+            onClick={() => onClickEndpoint?.({ wallIndex, pointIndex, pos: walls[wallIndex][pointIndex] })}
+          >
+            <sphereGeometry args={[thickness * 0.5, 12, 12]} />
+            <meshStandardMaterial color='yellow' transparent opacity={isHovered ? 1 : 0.5} />
+          </mesh>
+        );
+      })}
+    </>
   );
 };

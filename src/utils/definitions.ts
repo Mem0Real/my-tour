@@ -26,9 +26,7 @@ export interface WallProps {
 }
 
 export interface JointProps {
-  id: number;
-  start: THREE.Vector3;
-  end: THREE.Vector3;
+  walls: THREE.Vector3[][];
   thickness?: number;
   height?: number;
 
@@ -40,4 +38,5 @@ export interface JointProps {
 export interface EndpointRef {
   wallIndex: number;
   pointIndex: 0 | 1;
+  pos: THREE.Vector3 | null;
 }

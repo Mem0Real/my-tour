@@ -180,7 +180,7 @@ export const Board = () => {
 
   const handleEndpointClick = (wallIndex: number, pointIndex: 0 | 1) => {
     if (!isShiftDown) return;
-    setEditingPoint({ wallIndex, pointIndex });
+    setEditingPoint({ wallIndex, pointIndex, pos: null });
 
     // else handleBoardClick();
   };
@@ -225,9 +225,7 @@ export const Board = () => {
           )}
 
           <WallJoints
-            id={i}
-            start={start}
-            end={end}
+            walls={walls}
             thickness={WALL_THICKNESS}
             height={WALL_HEIGHT}
             onHoverEndpoint={setHoveredEndpoint}
@@ -260,9 +258,7 @@ export const Board = () => {
             )}
 
             <WallJoints
-              id={i}
-              start={start}
-              end={end}
+              walls={walls}
               thickness={WALL_THICKNESS}
               height={WALL_HEIGHT}
               onHoverEndpoint={setHoveredEndpoint}
