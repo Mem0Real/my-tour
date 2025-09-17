@@ -14,7 +14,6 @@ export function EditInterface({ children }: Children) {
   const setCursor = useSetAtom(cursorTypeAtom);
 
   useEffect(() => {
-    console.log('[EditInterface] Load');
     setCursor(CursorTypes.POINTER);
   }, []);
 

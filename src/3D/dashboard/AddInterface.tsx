@@ -5,7 +5,7 @@ import * as THREE from 'three';
 
 import { cameraTypeAtom, insertAtom } from '@/utils/atoms/ui';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { isDrawingAtom, loopsAtom, previewPointAtom, snapCuesAtom, wallsAtom } from '@/utils/atoms/drawing';
+import { isDrawingAtom, previewPointAtom, snapCuesAtom, wallsAtom } from '@/utils/atoms/drawing';
 
 import { Children, LoopPoint } from '@/utils/definitions';
 import { computeWinding, snapToPoints, straighten } from '@/3D/helpers/wallHelper';
@@ -22,11 +22,6 @@ import { Wall } from '@/3D/dashboard/components/Wall';
 import { LengthOverlay } from '@/3D/dashboard/components/LengthOverlay';
 
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
-import { Three } from '@/3D/base/Three';
-import { WallChain } from '@/3D/dashboard/components/WallChain';
-import { ThreeEvent } from '@react-three/fiber';
-
-let lastClickTime = 0; // put this outside the component or in a ref
 
 export const AddInterface = ({ children }: Children) => {
   // const [loops, setLoops] = useAtom(loopsAtom);
@@ -54,10 +49,6 @@ export const AddInterface = ({ children }: Children) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentLoop, isDrawing]);
-
-  useEffect(() => {
-    console.log('[AddInterface] Load');
-  }, []);
 
   const handleRightClick = (e: any) => {
     if (e?.button === 2 && !e.repeat) setDragging(true);
@@ -165,8 +156,6 @@ export const AddInterface = ({ children }: Children) => {
 
   const drawPoints: THREE.Vector3[] = currentLoop.map((p) => p.pos);
   if (previewPoint) drawPoints.push(previewPoint);
-
-  const winding = computeWinding(currentLoop.map((p) => p.pos));
 
   return (
     <ToolInputProvider value={handlers}>

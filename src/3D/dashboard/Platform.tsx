@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import * as THREE from 'three';
 
 import { useAtomValue } from 'jotai';
@@ -10,6 +10,7 @@ import { LengthOverlay } from '@/3D/dashboard/components/LengthOverlay';
 import { SnapCues } from '@/3D/dashboard/components/SnapCues';
 import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
 import { Wall } from '@/3D/dashboard/components/Wall';
+import { WallChains } from '@/3D/dashboard/components/WallChains';
 
 export const Platform = () => {
   const walls = useAtomValue(wallsAtom);
@@ -17,10 +18,6 @@ export const Platform = () => {
   const snapCues = useAtomValue(snapCuesAtom);
 
   const { onPointerDown, onPointerMove, onPointerUp, onRightClick, onKeyDown } = useToolInput();
-
-  useEffect(() => {
-    console.log('[Platform] Load');
-  }, []);
 
   return (
     <>
@@ -38,43 +35,9 @@ export const Platform = () => {
         <meshStandardMaterial transparent opacity={0} />
       </mesh>
 
-      {walls.map(([start, end], i) => {
-        if (!end) return null;
+      {/* Rendered walls */}
+      <WallChains />
 
-        // Compute prevDir & nextDir for the miter logic
-        const prevDir =
-          i > 0
-            ? new THREE.Vector3()
-                .subVectors(start, walls[i - 1][0])
-                .setY(0)
-                .normalize()
-            : null;
-        const nextDir =
-          i < walls.length - 1
-            ? new THREE.Vector3()
-                .subVectors(walls[i + 1][1], end)
-                .setY(0)
-                .normalize()
-            : null;
-
-        return (
-          <React.Fragment key={`wall-${i}`}>
-            <Wall
-              id={i}
-              start={start}
-              end={end}
-              thickness={WALL_THICKNESS}
-              height={WALL_HEIGHT}
-              color={'lightgrey'}
-              prevDir={prevDir}
-              nextDir={nextDir}
-            />
-            {cameraType === CameraTypes.ORTHOGRAPHIC && (
-              <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />
-            )}
-          </React.Fragment>
-        );
-      })}
       {/* Snap cues */}
       <SnapCues points={snapCues} />
     </>
