@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Wall } from './Wall';
+import { LengthOverlay } from './LengthOverlay';
 
 interface WallChainProps {
   points: THREE.Vector3[];
@@ -7,9 +8,10 @@ interface WallChainProps {
   height: number;
   color: string;
   closed?: boolean;
+  overlay?: boolean | 'active'; // <-- add this
 }
 
-export function WallChain({ points, thickness, height, color, closed = false }: WallChainProps) {
+export function WallChain({ points, thickness, height, color, closed = false, overlay = false }: WallChainProps) {
   if (points.length < 2) return null;
   const segmentCount = closed ? points.length : points.length - 1;
 
@@ -19,7 +21,6 @@ export function WallChain({ points, thickness, height, color, closed = false }: 
         const start = points[i];
         const end = points[(i + 1) % points.length];
 
-        // Only assign prev/next if they truly exist (for open chains)
         const hasPrev = closed || i > 0;
         const hasNext = closed || i + 2 < points.length;
 
@@ -29,19 +30,22 @@ export function WallChain({ points, thickness, height, color, closed = false }: 
         const prevDir = prev ? new THREE.Vector3().subVectors(start, prev).normalize() : null;
         const nextDir = next ? new THREE.Vector3().subVectors(next, end).normalize() : null;
 
+        const showOverlay = overlay === true || (overlay === 'active' && i === segmentCount - 1);
+
         return (
-          <Wall
-            key={i}
-            id={i}
-            start={start}
-            end={end}
-            thickness={thickness}
-            height={height}
-            color={color}
-            prevDir={prevDir}
-            nextDir={nextDir}
-            // rest of props...
-          />
+          <group key={i}>
+            <Wall
+              id={i}
+              start={start}
+              end={end}
+              thickness={thickness}
+              height={height}
+              color={color}
+              prevDir={prevDir}
+              nextDir={nextDir}
+            />
+            {showOverlay && <LengthOverlay start={start} end={end} />}
+          </group>
         );
       })}
     </>

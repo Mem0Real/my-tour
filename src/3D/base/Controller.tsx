@@ -27,8 +27,8 @@ export const Controller = ({ enablePan = true, enableRotate = false }) => {
       zoomSpeed={3}
       panSpeed={0.5}
       mouseButtons={mouseButtons}
-      minZoom={0.8}
-      maxZoom={20}
+      minZoom={0.2}
+      maxZoom={40}
     />
   );
 };

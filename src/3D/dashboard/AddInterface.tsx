@@ -5,7 +5,7 @@ import * as THREE from 'three';
 
 import { cameraTypeAtom, insertAtom } from '@/utils/atoms/ui';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { isDrawingAtom, previewPointAtom, snapCuesAtom, wallsAtom } from '@/utils/atoms/drawing';
+import { isDrawingAtom, loopsAtom, previewPointAtom, snapCuesAtom, wallsAtom } from '@/utils/atoms/drawing';
 
 import { Children, LoopPoint } from '@/utils/definitions';
 import { snapToPoints, straighten } from '@/3D/helpers/wallHelper';
@@ -26,7 +26,7 @@ import { Three } from '@/3D/base/Three';
 import { WallChain } from '@/3D/dashboard/components/WallChain';
 
 export const AddInterface = ({ children }: Children) => {
-  const [walls, setWalls] = useAtom(wallsAtom);
+  const [loops, setLoops] = useAtom(loopsAtom);
   const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
   const [previewPoint, setPreviewPoint] = useAtom(previewPointAtom);
 
@@ -65,18 +65,19 @@ export const AddInterface = ({ children }: Children) => {
     let clicked = e.point.clone();
     clicked.y = 0;
 
-    const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+    const allWalls = loops.flatMap((loop) =>
+      loop.map((start, i) => [start, loop[(i + 1) % loop.length]] as [THREE.Vector3, THREE.Vector3])
+    );
 
     const currentLoopPositions = currentLoop.map((p) => p.pos);
     const { snappedPoint, snappedWall } = snapToPoints(clicked, currentLoopPositions, allWalls, SNAP_TOLERANCE);
 
     const pointData: LoopPoint = {
-      pos: snappedPoint,
+      pos: snappedPoint.clone(), // Always clone!
       snappedWall,
     };
 
     if (!isDrawing) {
-      // Start new loop
       setCurrentLoop([pointData]);
       setIsDrawing(true);
       setPreviewPoint(null);
@@ -88,7 +89,7 @@ export const AddInterface = ({ children }: Children) => {
 
     // Straighten relative to last point
     const newPos = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
-    const newPointData: LoopPoint = { pos: newPos, snappedWall: snappedWall || undefined };
+    const newPointData: LoopPoint = { pos: newPos.clone(), snappedWall: snappedWall || undefined };
 
     // _____ Auto-close conditions ______ //
     const nearFirstPoint = newPos.distanceTo(firstPoint.pos) < SNAP_DISTANCE && currentLoop.length > 2;
@@ -96,25 +97,16 @@ export const AddInterface = ({ children }: Children) => {
 
     // 1) Close if near first point (basic)
     if (nearFirstPoint) {
-      console.log('Near');
-      const newWalls = currentLoop
-        .concat([newPointData])
-        .map((p, i, arr) => [p.pos, arr[(i + 1) % arr.length].pos] as [THREE.Vector3, THREE.Vector3]);
-
-      setWalls([...walls, ...newWalls]);
+      const newLoopPoints = currentLoop.concat([newPointData]).map((p) => p.pos.clone());
+      setLoops([...loops, newLoopPoints]);
       setCurrentLoop([]);
       setPreviewPoint(null);
       setIsDrawing(false);
       return;
     } else if (bothEndsSnapped) {
-      
       // 2) Close if first & new point are both snapped to walls (can be different)
-      const newWalls = currentLoop
-        .concat([newPointData])
-        .map((p, i, arr) => [p.pos, arr[i + 1]?.pos].filter(Boolean) as THREE.Vector3[])
-        .filter((seg) => seg.length === 2) as [THREE.Vector3, THREE.Vector3][];
-
-      setWalls([...walls, ...newWalls]);
+      const newLoopPoints = currentLoop.concat([newPointData]).map((p) => p.pos.clone());
+      setLoops([...loops, newLoopPoints]);
       setCurrentLoop([]);
       setPreviewPoint(null);
       setIsDrawing(false);
@@ -133,7 +125,11 @@ export const AddInterface = ({ children }: Children) => {
       const cursor = e.point.clone();
       cursor.y = 0;
 
-      const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+      // Get all existing wall segments from closed loops!
+      const allWalls = loops.flatMap((loop) =>
+        loop.map((start, i) => [start, loop[(i + 1) % loop.length]] as [THREE.Vector3, THREE.Vector3])
+      );
+
       const { snappedPoint } = snapToPoints(
         cursor,
         currentLoop.map((p) => p.pos),
@@ -147,7 +143,7 @@ export const AddInterface = ({ children }: Children) => {
       setPreviewPoint(straightened);
       setSnapCues([snappedPoint]);
     },
-    [isDrawing, dragging, currentLoop, walls, setPreviewPoint, setSnapCues]
+    [isDrawing, dragging, currentLoop, loops, setPreviewPoint, setSnapCues]
   );
 
   const handlers = {
@@ -159,12 +155,12 @@ export const AddInterface = ({ children }: Children) => {
   };
 
   const drawPoints: THREE.Vector3[] = currentLoop.map((p) => p.pos);
-  if (previewPoint) drawPoints.push(previewPoint); // for the live segment
+  if (previewPoint) drawPoints.push(previewPoint);
 
   return (
     <ToolInputProvider value={handlers}>
       {children}
-      <WallChain points={drawPoints} thickness={WALL_THICKNESS} height={WALL_HEIGHT} color='lightblue' closed={false} />
+      <WallChain points={drawPoints} thickness={WALL_THICKNESS} height={WALL_HEIGHT} color='white' closed={false} />
     </ToolInputProvider>
   );
 };

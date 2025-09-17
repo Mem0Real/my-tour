@@ -22,7 +22,7 @@ export const ResponsiveGrid = () => {
       sectionSize={sectionSize}
       sectionThickness={1.0}
       sectionColor='#777'
-      fadeDistance={40}
+      fadeDistance={120}
       fadeStrength={1}
       frustumCulled={false}
     />
