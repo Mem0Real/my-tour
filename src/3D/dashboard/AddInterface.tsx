@@ -8,7 +8,7 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { isDrawingAtom, loopsAtom, previewPointAtom, snapCuesAtom, wallsAtom } from '@/utils/atoms/drawing';
 
 import { Children, LoopPoint } from '@/utils/definitions';
-import { snapToPoints, straighten } from '@/3D/helpers/wallHelper';
+import { computeWinding, snapToPoints, straighten } from '@/3D/helpers/wallHelper';
 import {
   CameraTypes,
   SNAP_DISTANCE,
@@ -166,22 +166,32 @@ export const AddInterface = ({ children }: Children) => {
   const drawPoints: THREE.Vector3[] = currentLoop.map((p) => p.pos);
   if (previewPoint) drawPoints.push(previewPoint);
 
+  const winding = computeWinding(currentLoop.map((p) => p.pos));
+
   return (
     <ToolInputProvider value={handlers}>
       {children}
       {currentLoop.map((pointData, i) => {
         const start = pointData.pos;
         const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1].pos;
-
         if (!end) return null;
 
+        const prevDir = i > 0 ? new THREE.Vector3().subVectors(start, currentLoop[i - 1].pos).normalize() : null;
+        const nextDir =
+          i < currentLoop.length - 1 ? new THREE.Vector3().subVectors(currentLoop[i + 1].pos, end).normalize() : null;
+
         return (
-          <React.Fragment key={`current-${i}`}>
-            <Wall id={i} start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} color='white' />
-            {i === currentLoop.length - 1 && previewPoint && (
-              <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
-            )}
-          </React.Fragment>
+          <Wall
+            key={i}
+            id={i}
+            start={start}
+            end={end}
+            thickness={WALL_THICKNESS}
+            height={WALL_HEIGHT}
+            color='white'
+            prevDir={prevDir}
+            nextDir={nextDir}
+          />
         );
       })}
     </ToolInputProvider>

@@ -106,3 +106,13 @@ export function getMiterOffset(thisWallDir: THREE.Vector3, neighborDir: THREE.Ve
   if (Math.abs(angle) < 1e-4) return thickness / 2;
   return thickness / 2 / Math.sin(angle / 2);
 }
+
+export const computeWinding = (points: THREE.Vector3[]): number => {
+  let sum = 0;
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i];
+    const b = points[(i + 1) % points.length];
+    sum += (b.x - a.x) * (b.z + a.z);
+  }
+  return sum; // >0 = clockwise, <0 = counter-clockwise
+};

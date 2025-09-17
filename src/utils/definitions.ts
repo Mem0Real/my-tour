@@ -26,6 +26,10 @@ export interface WallProps {
 
   prevDir?: THREE.Vector3 | null;
   nextDir?: THREE.Vector3 | null;
+
+  first?: boolean
+  prevWallEnd?: THREE.Vector3 | null;
+  winding?: number
 }
 
 export interface JointProps {
