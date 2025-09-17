@@ -1,12 +1,21 @@
 'use client';
 
-import { cameraTypeAtom } from '@/utils/atoms/ui';
+import { cameraTypeAtom, keysPressedAtom } from '@/utils/atoms/ui';
 import { CameraTypes } from '@/utils/constants';
-import { useSetAtom } from 'jotai';
-import React from 'react';
+import { useAtomValue, useSetAtom } from 'jotai';
+import React, { useEffect } from 'react';
+
+const { FPS, ORTHOGRAPHIC, PERSPECTIVE } = CameraTypes;
 
 export const Footer = () => {
   const setCameraType = useSetAtom(cameraTypeAtom);
+
+  const keysPressed = useAtomValue(keysPressedAtom);
+
+  useEffect(() => {
+    if (!keysPressed) return;
+    if (keysPressed === 3) setCameraType(FPS);
+  }, [keysPressed]);
 
   return (
     <footer className='absolute bottom-20 left-1/2 z-50'>
@@ -14,9 +23,7 @@ export const Footer = () => {
         <button
           className='hover:cursor-pointer hover:bg-neutral-300 w-full h-full px-5 py-2'
           onClick={() => {
-            setCameraType((prev) =>
-              prev === CameraTypes.ORTHOGRAPHIC ? CameraTypes.PERSPECTIVE : CameraTypes.ORTHOGRAPHIC
-            );
+            setCameraType((prev) => (prev === ORTHOGRAPHIC ? PERSPECTIVE : ORTHOGRAPHIC));
           }}
         >
           Cam

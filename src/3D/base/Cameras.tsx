@@ -32,19 +32,24 @@ export const Cameras = () => {
     }
   }, [camera, cameraType]);
 
-  return cameraType === CameraTypes.PERSPECTIVE ? (
-    <PerspectiveCamera makeDefault fov={60} near={0.1} far={50} />
-  ) : (
-    <OrthographicCamera
-      makeDefault
-      left={left}
-      right={right}
-      top={top}
-      bottom={bottom}
-      near={0.1}
-      far={100}
-      rotation={[-Math.PI / 2, 0, 0]}
-      manual
-    />
-  );
+  const { PERSPECTIVE, FPS, ORTHOGRAPHIC } = CameraTypes;
+
+  switch (cameraType) {
+    case PERSPECTIVE | FPS:
+      return <PerspectiveCamera makeDefault fov={60} near={0.1} far={50} />;
+    case ORTHOGRAPHIC:
+      return (
+        <OrthographicCamera
+          makeDefault
+          left={left}
+          right={right}
+          top={top}
+          bottom={bottom}
+          near={0.1}
+          far={100}
+          rotation={[-Math.PI / 2, 0, 0]}
+          manual
+        />
+      );
+  }
 };

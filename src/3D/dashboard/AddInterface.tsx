@@ -69,7 +69,7 @@ export const AddInterface = ({ children }: Children) => {
 
   const handleBoardClick = (e: any) => {
     if (!e || !e.point || e.button === 2 || insert !== 'Wall') return;
-    if (cameraType === CameraTypes.PERSPECTIVE) return;
+    if (cameraType === CameraTypes.PERSPECTIVE && !e.shiftKey) return;
 
     let clicked = e.point.clone();
     clicked.y = 0;

@@ -1,6 +1,7 @@
 export enum CameraTypes {
   PERSPECTIVE,
   ORTHOGRAPHIC,
+  FPS,
 }
 
 export enum CursorTypes {
