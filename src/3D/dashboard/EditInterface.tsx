@@ -13,6 +13,9 @@ export function EditInterface({ children }: Children) {
   useEffect(() => {
     setCursor(CursorTypes.POINTER);
   }, [setCursor]);
+  useEffect(() => {
+    console.log('[EditInterface] Load');
+  }, []);
 
   // This will ONLY fire when the actual Html element is clicked
   const handlePointerDown = (e: MouseEvent) => {

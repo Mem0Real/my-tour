@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Wall } from './Wall';
 import { LengthOverlay } from './LengthOverlay';
+import { useState } from 'react';
 
 interface WallChainProps {
   points: THREE.Vector3[];
@@ -13,13 +14,17 @@ interface WallChainProps {
 
 export function WallChain({ points, thickness, height, color, closed = false, overlay = false }: WallChainProps) {
   if (points.length < 2) return null;
+  const [hoveredWallIndex, setHoveredWallIndex] = useState<number | null>(null);
   const segmentCount = closed ? points.length : points.length - 1;
 
   return (
     <>
       {Array.from({ length: segmentCount }).map((_, i) => {
         const start = points[i];
-        const end = points[(i + 1) % points.length];
+        // const end = closed ? points[(i + 1) % points.length] : points[i + 1];
+        const end = points[i + 1];
+
+        if (!end) return null; // safeguard
 
         const hasPrev = closed || i > 0;
         const hasNext = closed || i + 2 < points.length;
@@ -33,7 +38,7 @@ export function WallChain({ points, thickness, height, color, closed = false, ov
         const showOverlay = overlay === true || (overlay === 'active' && i === segmentCount - 1);
 
         return (
-          <group key={i}>
+          <group key={i} onPointerOver={() => setHoveredWallIndex(i)} onPointerOut={() => setHoveredWallIndex(-1)}>
             <Wall
               id={i}
               start={start}
@@ -41,10 +46,10 @@ export function WallChain({ points, thickness, height, color, closed = false, ov
               thickness={thickness}
               height={height}
               color={color}
-              prevDir={prevDir}
-              nextDir={nextDir}
+              // prevDir={prevDir}
+              // nextDir={nextDir}
             />
-            {showOverlay && <LengthOverlay start={start} end={end} />}
+            {i === hoveredWallIndex && showOverlay && <LengthOverlay start={start} end={end} />}
           </group>
         );
       })}

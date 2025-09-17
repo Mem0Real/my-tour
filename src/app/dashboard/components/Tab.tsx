@@ -24,6 +24,10 @@ export const Tab = () => {
     setCursorType(CursorTypes.DEFAULT);
   }, [activeTab]);
 
+  useEffect(() => {
+    console.log("[Tab] Load");
+  }, [])
+
   return (
     <div className='absolute top-0 left-0 z-10 w-fit px-4 py-2 pt-4 rounded-b-2xl mt-5 ms-5 bg-neutral-200/40 shadow-inner shadow-neutral-500/80  text-neutral-900 transition-all duration-300 ease-in-out'>
       <div className='flex gap-4 items-center'>

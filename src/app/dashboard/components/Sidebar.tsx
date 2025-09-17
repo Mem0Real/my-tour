@@ -13,8 +13,10 @@ export const Sidebar = () => {
 
   useEffect(() => {
     setCursor(insert ? CursorTypes.CROSS : CursorTypes.DEFAULT);
-    console.log(insert);
+    console.log(`[Sidebar] ${insert}`);
   }, [insert]);
+
+  
 
   return (
     <div className='fixed left-0 top-1/3 -translate-y-1/2 w-fit bg-neutral-200/40 shadow-lg shadow-neutral-600 border-r border-t border-neutral-500 text-neutral-900 rounded-r-sm transition-all duration-300 ease-in-out z-10 py-2'>

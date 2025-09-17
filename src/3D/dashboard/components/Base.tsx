@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Cameras } from '@/3D/base/Cameras';
 import { Controller } from '@/3D/base/Controller';
@@ -7,6 +7,10 @@ import { ResponsiveGrid } from '@/3D/base/ResponsiveGrid';
 import { Three } from '@/3D/base/Three';
 
 export const Base = () => {
+    useEffect(() => {
+      console.log("[Base] Load");
+    }, [])
+    
   return (
     <>
       <Lights />
