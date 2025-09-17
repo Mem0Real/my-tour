@@ -174,24 +174,41 @@ export const AddInterface = ({ children }: Children) => {
       {currentLoop.map((pointData, i) => {
         const start = pointData.pos;
         const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1].pos;
+
         if (!end) return null;
 
-        const prevDir = i > 0 ? new THREE.Vector3().subVectors(start, currentLoop[i - 1].pos).normalize() : null;
+        // Determine prevDir for the offset logic
+        const prevDir =
+          i > 0
+            ? new THREE.Vector3()
+                .subVectors(start, currentLoop[i - 1].pos)
+                .setY(0)
+                .normalize()
+            : null;
         const nextDir =
-          i < currentLoop.length - 1 ? new THREE.Vector3().subVectors(currentLoop[i + 1].pos, end).normalize() : null;
+          i < currentLoop.length - 1
+            ? new THREE.Vector3()
+                .subVectors(currentLoop[i + 2]?.pos || end, end)
+                .setY(0)
+                .normalize()
+            : null;
 
         return (
-          <Wall
-            key={i}
-            id={i}
-            start={start}
-            end={end}
-            thickness={WALL_THICKNESS}
-            height={WALL_HEIGHT}
-            color='white'
-            prevDir={prevDir}
-            nextDir={nextDir}
-          />
+          <React.Fragment key={`current-${i}`}>
+            <Wall
+              id={i}
+              start={start}
+              end={end}
+              thickness={WALL_THICKNESS}
+              height={WALL_HEIGHT}
+              color='white'
+              prevDir={prevDir}
+              nextDir={nextDir}
+            />
+            {i === currentLoop.length - 1 && previewPoint && (
+              <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
+            )}
+          </React.Fragment>
         );
       })}
     </ToolInputProvider>

@@ -1,24 +1,36 @@
 import * as THREE from 'three';
 import React, { FC, useMemo } from 'react';
+import { getMiterOffset } from '@/3D/helpers/wallHelper';
 import { WallProps } from '@/utils/definitions';
 
-export const Wall: FC<WallProps> = ({ start, end, thickness = 0.1, height = 2.5, color = 'white', id = 0 }) => {
-  // Compute wall direction
+export const Wall: FC<WallProps> = ({
+  start,
+  end,
+  thickness = 0.1,
+  height = 2.5,
+  color = 'white',
+  prevDir = null,
+  nextDir = null,
+}) => {
   const wallDir = new THREE.Vector3().subVectors(end, start).setY(0).normalize();
 
-  // Compute perpendicular vector for dynamic offset
-  // Flip direction depending on mouse movement or id parity if needed
-  const perpDir = useMemo(() => {
-    // For even walls: shift one way, for odd: shift opposite
-    const side = id % 2 === 0 ? 1 : -1;
-    return new THREE.Vector3(-wallDir.z * side, 0, wallDir.x * side);
-  }, [wallDir, id]);
+  // Only shift if direction differs from previous wall
+  let startOffset = 0;
+  let endOffset = 0;
 
-  const offsetStart = start.clone().add(perpDir.clone().multiplyScalar(thickness));
-  const offsetEnd = end.clone().add(perpDir.clone().multiplyScalar(thickness));
+  if (prevDir) {
+    const angleDiff = wallDir.angleTo(prevDir);
+    if (angleDiff > 1e-3) { // threshold to ignore straight continuation
+      startOffset = getMiterOffset(wallDir, prevDir, thickness);
+      endOffset = nextDir ? getMiterOffset(wallDir.clone().negate(), nextDir, thickness) : 0;
+    }
+  }
 
-  const mid = useMemo(() => new THREE.Vector3().lerpVectors(offsetStart, offsetEnd, 0.5), [offsetStart, offsetEnd]);
-  const dir = useMemo(() => new THREE.Vector3().subVectors(offsetEnd, offsetStart), [offsetStart, offsetEnd]);
+  const adjStart = start.clone().add(wallDir.clone().negate().multiplyScalar(startOffset));
+  const adjEnd = end.clone().add(wallDir.clone().multiplyScalar(endOffset));
+
+  const mid = useMemo(() => new THREE.Vector3().lerpVectors(adjStart, adjEnd, 0.5), [adjStart, adjEnd]);
+  const dir = useMemo(() => new THREE.Vector3().subVectors(adjEnd, adjStart), [adjStart, adjEnd]);
   const length = dir.length();
   if (length < 1e-4) return null;
 
