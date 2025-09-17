@@ -92,3 +92,17 @@ export function generateCornerFillers(loop: THREE.Vector3[], thickness: number, 
 
   return fillers;
 }
+
+/**
+ * Returns the miter offset for a wall endpoint given its neighbor direction.
+ * @param thisWallDir - normalized direction of this wall (use .negate() for start)
+ * @param neighborDir - normalized direction of adjacent wall
+ * @param thickness - wall thickness
+ */
+export function getMiterOffset(thisWallDir: THREE.Vector3, neighborDir: THREE.Vector3, thickness: number) {
+  let dot = thisWallDir.dot(neighborDir);
+  dot = THREE.MathUtils.clamp(dot, -1, 1);
+  const angle = Math.acos(dot);
+  if (Math.abs(angle) < 1e-4) return thickness / 2;
+  return thickness / 2 / Math.sin(angle / 2);
+}

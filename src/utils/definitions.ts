@@ -23,6 +23,9 @@ export interface WallProps {
   color?: string;
   hovered?: boolean;
   visible?: boolean;
+
+  prevDir?: THREE.Vector3 | null;
+  nextDir?: THREE.Vector3 | null;
 }
 
 export interface JointProps {
@@ -40,7 +43,6 @@ export interface EndpointRef {
   pointIndex: 0 | 1;
   pos: THREE.Vector3 | null;
 }
-
 
 export type ToolHandlers = {
   onPointerDown?: (e: any) => void;

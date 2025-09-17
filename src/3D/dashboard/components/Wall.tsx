@@ -1,31 +1,36 @@
-'use client';
-
 import * as THREE from 'three';
 import React, { FC, useMemo } from 'react';
+import { getMiterOffset } from '@/3D/helpers/wallHelper';
 import { WallProps } from '@/utils/definitions';
 
 export const Wall: FC<WallProps> = ({
-  id,
   start,
   end,
   thickness = 0.1,
   height = 2.5,
-  visible = false,
   color = 'white',
-}: WallProps) => {
-  const dir = useMemo(() => new THREE.Vector3().subVectors(end, start).setY(0), [start, end]);
-  const mid = useMemo(() => new THREE.Vector3().lerpVectors(start, end, 0.5), [start, end]);
+  prevDir = null,
+  nextDir = null,
+}) => {
+  const wallDir = new THREE.Vector3().subVectors(end, start).setY(0).normalize();
 
+  const startOffset = prevDir ? getMiterOffset(wallDir, prevDir, thickness) : 0;
+  const endOffset = nextDir ? getMiterOffset(wallDir.clone().negate(), nextDir, thickness) : 0;
+
+  const adjStart = start.clone().add(wallDir.clone().negate().multiplyScalar(startOffset));
+  const adjEnd = end.clone().add(wallDir.clone().multiplyScalar(endOffset));
+
+  const mid = useMemo(() => new THREE.Vector3().lerpVectors(adjStart, adjEnd, 0.5), [adjStart, adjEnd]);
+  const dir = useMemo(() => new THREE.Vector3().subVectors(adjEnd, adjStart), [adjStart, adjEnd]);
   const length = dir.length();
   if (length < 1e-4) return null;
 
   const angle = Math.atan2(dir.z, dir.x);
-  const boxLength = visible ? length + thickness : length; // Extend only finalized walls
 
   return (
-    <mesh position={[mid.x, height / 2, mid.z]} rotation={[0, -angle, 0]} castShadow receiveShadow>
-      <boxGeometry args={[boxLength, height, thickness]} />
-      <meshStandardMaterial color={color} metalness={0} roughness={1} opacity={1} />
+    <mesh position={[mid.x, height / 2, mid.z]} rotation={[0, -angle, 0]}>
+      <boxGeometry args={[length, height, thickness * 2]} />
+      <meshStandardMaterial color={color} />
     </mesh>
   );
 };

@@ -13,6 +13,7 @@ export const Sidebar = () => {
 
   useEffect(() => {
     setCursor(insert ? CursorTypes.CROSS : CursorTypes.DEFAULT);
+    console.log(insert);
   }, [insert]);
 
   return (

@@ -23,6 +23,7 @@ import { LengthOverlay } from '@/3D/dashboard/components/LengthOverlay';
 
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
 import { Three } from '@/3D/base/Three';
+import { WallChain } from '@/3D/dashboard/components/WallChain';
 
 export const AddInterface = ({ children }: Children) => {
   const [walls, setWalls] = useAtom(wallsAtom);
@@ -58,20 +59,24 @@ export const AddInterface = ({ children }: Children) => {
   };
 
   const handleBoardClick = (e: any) => {
-    console.log('[Board] click');
+    if (!e || !e.point || e.button === 2 || insert !== 'Wall') return;
+    if (cameraType === CameraTypes.PERSPECTIVE) return;
 
-    if (!e?.point || e?.button === 2 || !insert || cameraType === CameraTypes.PERSPECTIVE) return;
-
-    const clicked = e.point.clone();
+    let clicked = e.point.clone();
     clicked.y = 0;
 
     const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+
     const currentLoopPositions = currentLoop.map((p) => p.pos);
     const { snappedPoint, snappedWall } = snapToPoints(clicked, currentLoopPositions, allWalls, SNAP_TOLERANCE);
 
-    const pointData: LoopPoint = { pos: snappedPoint, snappedWall };
+    const pointData: LoopPoint = {
+      pos: snappedPoint,
+      snappedWall,
+    };
 
     if (!isDrawing) {
+      // Start new loop
       setCurrentLoop([pointData]);
       setIsDrawing(true);
       setPreviewPoint(null);
@@ -91,6 +96,7 @@ export const AddInterface = ({ children }: Children) => {
 
     // 1) Close if near first point (basic)
     if (nearFirstPoint) {
+      console.log('Near');
       const newWalls = currentLoop
         .concat([newPointData])
         .map((p, i, arr) => [p.pos, arr[(i + 1) % arr.length].pos] as [THREE.Vector3, THREE.Vector3]);
@@ -101,6 +107,7 @@ export const AddInterface = ({ children }: Children) => {
       setIsDrawing(false);
       return;
     } else if (bothEndsSnapped) {
+      
       // 2) Close if first & new point are both snapped to walls (can be different)
       const newWalls = currentLoop
         .concat([newPointData])
@@ -114,6 +121,7 @@ export const AddInterface = ({ children }: Children) => {
       return;
     }
 
+    // 3) Proceed normally
     setCurrentLoop([...currentLoop, newPointData]);
     setPreviewPoint(null);
   };
@@ -150,31 +158,13 @@ export const AddInterface = ({ children }: Children) => {
     onKeyDown: handleKeyDown,
   };
 
+  const drawPoints: THREE.Vector3[] = currentLoop.map((p) => p.pos);
+  if (previewPoint) drawPoints.push(previewPoint); // for the live segment
+
   return (
     <ToolInputProvider value={handlers}>
       {children}
-      {currentLoop.map((pointData, i) => {
-        const start = pointData.pos;
-        const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1].pos;
-        if (!end) return null;
-
-        return (
-          <React.Fragment key={`current-${i}`}>
-            <Wall
-              id={i}
-              start={start}
-              end={end}
-              thickness={WALL_THICKNESS}
-              height={WALL_HEIGHT}
-              color='lightblue'
-              visible={currentLoop[i + 2] ? true : false}
-            />
-            {i === currentLoop.length - 1 && previewPoint && (
-              <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
-            )}
-          </React.Fragment>
-        );
-      })}
+      <WallChain points={drawPoints} thickness={WALL_THICKNESS} height={WALL_HEIGHT} color='lightblue' closed={false} />
     </ToolInputProvider>
   );
 };
