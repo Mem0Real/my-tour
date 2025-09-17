@@ -24,15 +24,15 @@ const ActiveInterface = ({ children }: Children) => {
 };
 
 const Dashboard = () => {
-
   useEffect(() => {
-    console.log("[Load] Dashboard");
-  }, [])
+    console.log('[Load] Dashboard');
+  }, []);
+
   return (
     <>
       <Tab />
       <Sidebar />
-      
+
       <Three>
         <ActiveInterface>
           <Base />

@@ -30,7 +30,7 @@ export function KeyboardListener() {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
     };
-  }, [setKeysPressed]);
+  }, []);
 
   return null;
 }

@@ -14,7 +14,7 @@ export const Footer = () => {
 
   useEffect(() => {
     if (!keysPressed) return;
-    if (keysPressed === 3) setCameraType(FPS);
+    if (keysPressed === 3) setCameraType((prev) => (prev === FPS ? ORTHOGRAPHIC : FPS));
   }, [keysPressed]);
 
   return (

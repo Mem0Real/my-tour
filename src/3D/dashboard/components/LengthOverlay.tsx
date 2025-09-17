@@ -93,7 +93,26 @@ export const LengthOverlay: React.FC<LengthOverlayProps> = React.memo(
 
         {/* Inner text */}
         {visible && (
-          <Text
+          <Html
+            position={innerMid}
+            style={{
+              background: 'white',
+              color: '#1a1a1a',
+              padding: '2px 2px',
+              fontSize: '13px',
+              borderRadius: '3px',
+              whiteSpace: 'nowrap',
+              userSelect: 'none',
+              pointerEvents: 'none',
+              transform: `translate(-50%, -50%) rotate(${textRotation})`,
+              transformOrigin: 'center',
+            }}
+          >
+            {length.toFixed(2)} cm
+          </Html>
+        )}
+
+        {/* <Text
             position={innerMid}
             fontSize={0.15}
             color='#1a1a1a'
@@ -103,8 +122,7 @@ export const LengthOverlay: React.FC<LengthOverlayProps> = React.memo(
             outlineWidth={0.01}
           >
             {length.toFixed(2)} cm
-          </Text>
-        )}
+          </Text> */}
       </>
     );
   }

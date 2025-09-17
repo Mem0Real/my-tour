@@ -69,7 +69,7 @@ export const AddInterface = ({ children }: Children) => {
 
   const handleBoardClick = (e: any) => {
     if (!e || !e.point || e.button === 2 || insert !== 'Wall') return;
-    if (cameraType === CameraTypes.PERSPECTIVE && !e.shiftKey) return;
+    if (cameraType !== CameraTypes.ORTHOGRAPHIC && !e.shiftKey) return;
 
     let clicked = e.point.clone();
     clicked.y = 0;
@@ -132,6 +132,7 @@ export const AddInterface = ({ children }: Children) => {
   const handlePointerMove = useCallback(
     (e: any) => {
       if (!e?.point || dragging || !isDrawing) return;
+      if (cameraType !== CameraTypes.ORTHOGRAPHIC && !e.shiftKey) return;
 
       const cursor = e.point.clone();
       cursor.y = 0;
@@ -178,7 +179,7 @@ export const AddInterface = ({ children }: Children) => {
           <React.Fragment key={`current-${i}`}>
             <Wall id={i} start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} color='white' />
             {i === currentLoop.length - 1 && previewPoint && (
-              <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} />
+              <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
             )}
           </React.Fragment>
         );

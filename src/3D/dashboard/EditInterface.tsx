@@ -1,3 +1,7 @@
+'use client';
+
+import React, { useEffect } from 'react';
+
 import { Three } from '@/3D/base/Three';
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
 import { cursorTypeAtom } from '@/utils/atoms/ui';
@@ -5,16 +9,13 @@ import { CursorTypes } from '@/utils/constants';
 import { Children } from '@/utils/definitions';
 import { Html } from '@react-three/drei';
 import { useSetAtom } from 'jotai';
-import React, { useEffect } from 'react';
 
 export function EditInterface({ children }: Children) {
   const setCursor = useSetAtom(cursorTypeAtom);
 
   useEffect(() => {
-    setCursor(CursorTypes.POINTER);
-  }, [setCursor]);
-  useEffect(() => {
     console.log('[EditInterface] Load');
+    setCursor(CursorTypes.POINTER);
   }, []);
 
   // This will ONLY fire when the actual Html element is clicked
@@ -40,13 +41,11 @@ export function EditInterface({ children }: Children) {
 
   return (
     <ToolInputProvider value={handlers}>
-      <Three>
-        {children}
-        <mesh onPointerDown={handlePointerDown} onClick={handlePointerDown} onPointerOver={handlePointerOver}>
-          <boxGeometry args={[0.5, 0.5, 0.5]} />
-          <meshBasicMaterial color={'lightblue'} />
-        </mesh>
-      </Three>
+      {children}
+      <mesh onPointerDown={handlePointerDown} onClick={handlePointerDown} onPointerOver={handlePointerOver}>
+        <boxGeometry args={[0.5, 0.5, 0.5]} />
+        <meshBasicMaterial color={'lightblue'} />
+      </mesh>
     </ToolInputProvider>
   );
 }
