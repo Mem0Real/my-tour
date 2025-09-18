@@ -1,20 +1,13 @@
 import React from 'react';
-import * as THREE from 'three';
 
 import { useAtomValue } from 'jotai';
-import { snapCuesAtom, wallsAtom } from '@/utils/atoms/drawing';
-import { cameraTypeAtom } from '@/utils/atoms/ui';
-import { CameraTypes, WALL_HEIGHT, WALL_THICKNESS } from '@/utils/constants';
+import { snapCuesAtom } from '@/utils/atoms/drawing';
 
-import { LengthOverlay } from '@/3D/dashboard/components/LengthOverlay';
 import { SnapCues } from '@/3D/dashboard/components/SnapCues';
 import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
-import { Wall } from '@/3D/dashboard/components/Wall';
 import { WallChains } from '@/3D/dashboard/components/WallChains';
 
 export const Platform = () => {
-  const walls = useAtomValue(wallsAtom);
-  const cameraType = useAtomValue(cameraTypeAtom);
   const snapCues = useAtomValue(snapCuesAtom);
 
   const { onPointerDown, onPointerMove, onPointerUp, onRightClick, onKeyDown } = useToolInput();

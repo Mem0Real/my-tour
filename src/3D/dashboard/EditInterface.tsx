@@ -6,7 +6,7 @@ import { Three } from '@/3D/base/Three';
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
 import { cursorTypeAtom } from '@/utils/atoms/ui';
 import { CursorTypes } from '@/utils/constants';
-import { Children } from '@/utils/definitions';
+import { Children, WallData } from '@/utils/definitions';
 import { Html } from '@react-three/drei';
 import { useSetAtom } from 'jotai';
 
@@ -18,9 +18,10 @@ export function EditInterface({ children }: Children) {
   }, []);
 
   // This will ONLY fire when the actual Html element is clicked
-  const handlePointerDown = (e: MouseEvent) => {
-    e.stopPropagation();
-    console.log('Click on edit Html', e);
+  const handlePointerDown = (e: MouseEvent, wallData?: WallData) => {
+    // e.stopPropagation();
+
+    console.log('Click received: ', wallData);
   };
 
   const handleRightClick = (e: MouseEvent) => {
@@ -33,15 +34,15 @@ export function EditInterface({ children }: Children) {
   };
 
   const handlers = {
-    onPointerDown: handlePointerDown,
-    onPointerOver: handlePointerOver,
-    onRightClick: handleRightClick,
+    handlePointerDown: handlePointerDown,
+    handlePointerOver: handlePointerOver,
+    handleRightClick: handleRightClick,
   };
 
   return (
     <ToolInputProvider value={handlers}>
       {children}
-      <mesh onPointerDown={handlePointerDown} onClick={handlePointerDown} onPointerOver={handlePointerOver}>
+      <mesh>
         <boxGeometry args={[0.5, 0.5, 0.5]} />
         <meshBasicMaterial color={'lightblue'} />
       </mesh>

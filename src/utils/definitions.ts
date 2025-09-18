@@ -27,9 +27,13 @@ export interface WallProps {
   prevDir?: THREE.Vector3 | null;
   nextDir?: THREE.Vector3 | null;
 
-  first?: boolean
-  prevWallEnd?: THREE.Vector3 | null;
-  winding?: number
+  onPointerDown?: (e: any) => void;
+}
+
+export interface WallData {
+  id: number;
+  start: THREE.Vector3;
+  end: THREE.Vector3;
 }
 
 export interface JointProps {
@@ -49,9 +53,15 @@ export interface EndpointRef {
 }
 
 export type ToolHandlers = {
+  // Add
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
   onPointerUp?: (e: any) => void;
   onRightClick?: (e: any) => void;
   onKeyDown?: (e: KeyboardEvent) => void;
+
+  // Edit
+  handlePointerDown?: (e: any, wallData?: WallData) => void;
+  handlePointerOver?: (e: any) => void;
+  handleRightClick?: (e: any) => void;
 };
