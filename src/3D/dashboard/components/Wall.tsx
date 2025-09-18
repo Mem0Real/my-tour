@@ -20,7 +20,8 @@ export const Wall: FC<WallProps> = ({
 
   if (prevDir) {
     const angleDiff = wallDir.angleTo(prevDir);
-    if (angleDiff > 1e-3) { // threshold to ignore straight continuation
+    if (angleDiff > 1e-3) {
+      // threshold to ignore straight continuation
       startOffset = getMiterOffset(wallDir, prevDir, thickness);
       endOffset = nextDir ? getMiterOffset(wallDir.clone().negate(), nextDir, thickness) : 0;
     }
@@ -39,7 +40,7 @@ export const Wall: FC<WallProps> = ({
   return (
     <mesh position={[mid.x, height / 2, mid.z]} rotation={[0, -angle, 0]}>
       <boxGeometry args={[length, height, thickness * 2]} />
-      <meshStandardMaterial color={color} />
+      <meshStandardMaterial color={color} opacity={0.5} transparent />
     </mesh>
   );
 };

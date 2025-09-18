@@ -1,26 +1,41 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
 
-import { keysPressedAtom } from '@/utils/atoms/ui';
+import { keyPressedAtom, numberPressedAtom } from '@/utils/atoms/ui';
 
 export function KeyboardListener() {
-  const setKeysPressed = useSetAtom(keysPressedAtom);
+  const setNumberPressed = useSetAtom(numberPressedAtom);
+  const setKeyPressed = useSetAtom(keyPressedAtom);
+
+  const [shiftPressed, setShiftPressed] = useState(false);
+  const [altPressed, setAltPressed] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const { repeat, key, altKey } = event;
+      const { repeat, key, altKey, shiftKey } = event;
 
       if (repeat) return;
 
-      if (altKey && key >= '1' && key <= '9') setKeysPressed(Number(key));
+      if ((altKey || altPressed) && key >= '1' && key <= '9') {
+        setNumberPressed(Number(key));
+        setAltPressed(true);
+      }
+
+      if ((shiftKey || shiftPressed) && key) setKeyPressed(key.toLowerCase());
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      const { key } = event;
+      const { key, altKey, shiftKey } = event;
 
-      if (key >= '1' && key <= '9') setKeysPressed(0);
+      if (altKey) setAltPressed(false);
+      if (shiftKey) setShiftPressed(false);
+
+      if (key >= '1' && key <= '9') setNumberPressed(0);
+      else {
+        setKeyPressed('');
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);

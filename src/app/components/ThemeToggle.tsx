@@ -1,18 +1,25 @@
 'use client';
 
-import { useAtom } from 'jotai';
+import { keyPressedAtom } from '@/utils/atoms/ui';
+import { useAtom, useAtomValue } from 'jotai';
 import { Moon, SunMedium } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import React, { useEffect, useState } from 'react';
 
 export const ThemeToggle = () => {
   const { theme, setTheme } = useTheme();
+  const keyPressed = useAtomValue(keyPressedAtom);
 
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!keyPressed) return;
+    if (keyPressed === 'd') setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  }, [keyPressed]);
 
   if (!mounted) return null;
 

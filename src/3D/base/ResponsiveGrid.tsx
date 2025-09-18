@@ -23,7 +23,7 @@ export const ResponsiveGrid = () => {
       cellSize={0}
       sectionSize={sectionSize}
       sectionThickness={1.0}
-      sectionColor={theme === 'dark' ? '#ededed' : '#a5a5aa'}
+      sectionColor={theme === 'dark' ? '#ededed' : '#848488'}
       fadeDistance={120}
       fadeStrength={1}
       frustumCulled={false}

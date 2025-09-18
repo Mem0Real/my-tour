@@ -7,7 +7,7 @@ import { cameraTypeAtom, insertAtom } from '@/utils/atoms/ui';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { isDrawingAtom, previewPointAtom, snapCuesAtom, wallsAtom } from '@/utils/atoms/drawing';
 
-import { Children, LoopPoint } from '@/utils/definitions';
+import { Children, LoopPoint, ToolHandlers } from '@/utils/definitions';
 import { computeWinding, snapToPoints, straighten } from '@/3D/helpers/wallHelper';
 import {
   CameraTypes,
@@ -26,11 +26,11 @@ import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
 export const AddInterface = ({ children }: Children) => {
   // const [loops, setLoops] = useAtom(loopsAtom);
   const [walls, setWalls] = useAtom(wallsAtom);
+  const [insert, setInsert] = useAtom(insertAtom);
 
   const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
   const [previewPoint, setPreviewPoint] = useAtom(previewPointAtom);
 
-  const insert = useAtomValue(insertAtom);
   const cameraType = useAtomValue(cameraTypeAtom);
 
   const setSnapCues = useSetAtom(snapCuesAtom);
@@ -146,12 +146,19 @@ export const AddInterface = ({ children }: Children) => {
     [isDrawing, dragging, currentLoop, walls, setPreviewPoint, setSnapCues]
   );
 
+  const items = [
+    { label: 'Wall', action: () => setInsert('wall') },
+    { label: 'Door', action: () => setInsert('door') },
+    { label: 'Window', action: () => setInsert('window') },
+  ];
+
   const handlers = {
     onPointerDown: handleBoardClick,
     onPointerUp: handlePointerUp,
     onPointerMove: handlePointerMove,
     onRightClick: handleRightClick,
     onKeyDown: handleKeyDown,
+    sidebarItems: items,
   };
 
   const drawPoints: THREE.Vector3[] = currentLoop.map((p) => p.pos);

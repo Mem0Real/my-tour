@@ -27,14 +27,14 @@ const Dashboard = () => {
   return (
     <>
       <Tab />
-      <Sidebar />
+      <ActiveInterface>
+        <Sidebar />
 
-      <Three>
-        <ActiveInterface>
+        <Three>
           <Base />
           <Platform />
-        </ActiveInterface>
-      </Three>
+        </Three>
+      </ActiveInterface>
     </>
   );
 };

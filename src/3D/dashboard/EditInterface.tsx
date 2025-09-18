@@ -7,11 +7,12 @@ import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
 import { cursorTypeAtom } from '@/utils/atoms/ui';
 import { CursorTypes } from '@/utils/constants';
 import { Children, WallData } from '@/utils/definitions';
-import { Html } from '@react-three/drei';
 import { useSetAtom } from 'jotai';
+import { activeWallAtom } from '@/utils/atoms/drawing';
 
 export function EditInterface({ children }: Children) {
   const setCursor = useSetAtom(cursorTypeAtom);
+  const setActiveWall = useSetAtom(activeWallAtom);
 
   useEffect(() => {
     setCursor(CursorTypes.POINTER);
@@ -20,8 +21,9 @@ export function EditInterface({ children }: Children) {
   // This will ONLY fire when the actual Html element is clicked
   const handlePointerDown = (e: MouseEvent, wallData?: WallData) => {
     // e.stopPropagation();
+    if (!wallData) return;
 
-    console.log('Click received: ', wallData);
+    setActiveWall(wallData);
   };
 
   const handleRightClick = (e: MouseEvent) => {
@@ -33,19 +35,24 @@ export function EditInterface({ children }: Children) {
     console.log('hovering Html', e);
   };
 
+  const sidebarItems = [{ label: 'Size', action: () => console.log('action') }];
+
   const handlers = {
     handlePointerDown: handlePointerDown,
     handlePointerOver: handlePointerOver,
     handleRightClick: handleRightClick,
+    sidebarItems,
   };
 
   return (
     <ToolInputProvider value={handlers}>
       {children}
-      <mesh>
-        <boxGeometry args={[0.5, 0.5, 0.5]} />
-        <meshBasicMaterial color={'lightblue'} />
-      </mesh>
+      <Three>
+        <mesh>
+          <boxGeometry args={[0.5, 0.5, 0.5]} />
+          <meshBasicMaterial color={'lightblue'} />
+        </mesh>
+      </Three>
     </ToolInputProvider>
   );
 }

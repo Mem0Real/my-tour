@@ -13,16 +13,9 @@ import { WallData } from '@/utils/definitions';
 export const WallChains = () => {
   const walls = useAtomValue(wallsAtom);
   const cameraType = useAtomValue(cameraTypeAtom);
-
-  const setActiveWall = useSetAtom(activeWallAtom);
+  const activeWall = useAtomValue(activeWallAtom);
 
   const { handlePointerDown } = useToolInput();
-
-  const handleWallClick = (e: any, wallData: WallData) => {
-    // e.stopPropagation(); // Prevent the platform's click handler from firing
-    setActiveWall(wallData);
-    console.log('wallClick: ', wallData);
-  };
 
   return walls.map(([start, end], i) => {
     if (!end) return null;
@@ -44,7 +37,7 @@ export const WallChains = () => {
         : null;
 
     return (
-      <group key={`wall-${i}`} onPointerDown={(e) => handleWallClick?.(e, { id: i, start, end })}>
+      <group key={`wall-${i}`} onPointerDown={(e) => handlePointerDown?.(e, { id: i, start, end })}>
         <Wall
           id={i}
           start={start}
