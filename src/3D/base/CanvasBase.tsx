@@ -1,25 +1,24 @@
 // CanvasBase.tsx
 'use client';
 
-import { cursorTypeAtom } from '@/utils/atoms/ui';
-import { Canvas } from '@react-three/fiber';
-import { useAtomValue } from 'jotai';
-import { r3f } from '@/utils/globals';
-import { Preload } from '@react-three/drei';
-import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { Preload } from '@react-three/drei';
+import { useAtomValue } from 'jotai';
+import { useTheme } from 'next-themes';
 
-export const CanvasBase = ({ props, eventSource, eventPrefix }: any) => {
-  // Accept forwarded props
+import { r3f } from '@/utils/globals';
+import { cursorTypeAtom } from '@/utils/atoms/ui';
+
+export const CanvasBase = ({ props }: any) => {
   const cursorType = useAtomValue(cursorTypeAtom);
   const { theme } = useTheme();
 
+  // To make sure the component is mounted before loading canvas (gets rid of hydration err)
   const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
     setMounted(true);
   }, []);
-
   if (!mounted) return null;
 
   return (

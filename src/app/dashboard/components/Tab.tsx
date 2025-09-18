@@ -31,7 +31,7 @@ export const Tab = () => {
             className={`px-3 py-2 hover:cursor-pointer rounded-md ${
               tool.value === activeTool
                 ? 'ring-2 dark:ring-neutral-800/40 rounded-lg'
-                : 'hover:ring hover:ring-neutral-200 dark:hover:ring-neutral-700 dark:hover:text-neutral-300'
+                : 'hover:ring hover:ring-neutral-200 dark:hover:ring-neutral-700'
             }`}
             onClick={() => setActiveTool(tool.value)}
           >

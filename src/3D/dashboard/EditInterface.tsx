@@ -35,24 +35,19 @@ export function EditInterface({ children }: Children) {
     console.log('hovering Html', e);
   };
 
-  const sidebarItems = [{ label: 'Size', action: () => console.log('action') }];
-
   const handlers = {
     handlePointerDown: handlePointerDown,
     handlePointerOver: handlePointerOver,
     handleRightClick: handleRightClick,
-    sidebarItems,
   };
 
   return (
     <ToolInputProvider value={handlers}>
       {children}
-      <Three>
         <mesh>
           <boxGeometry args={[0.5, 0.5, 0.5]} />
           <meshBasicMaterial color={'lightblue'} />
         </mesh>
-      </Three>
     </ToolInputProvider>
   );
 }

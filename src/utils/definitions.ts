@@ -64,7 +64,4 @@ export type ToolHandlers = {
   handlePointerDown?: (e: any, wallData?: WallData) => void;
   handlePointerOver?: (e: any) => void;
   handleRightClick?: (e: any) => void;
-
-  // Shared
-  sidebarItems?: { label: string; action: () => void }[];
 };

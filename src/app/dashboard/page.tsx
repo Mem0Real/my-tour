@@ -17,9 +17,20 @@ const ActiveInterface = ({ children }: Children) => {
 
   switch (activeTool) {
     case 'add':
-      return <AddInterface>{children}</AddInterface>;
+      return (
+        <>
+          <Sidebar />
+          <Three>
+            <AddInterface>{children}</AddInterface>;
+          </Three>
+        </>
+      );
     case 'edit':
-      return <EditInterface>{children}</EditInterface>;
+      return (
+        <Three>
+          <EditInterface>{children}</EditInterface>
+        </Three>
+      );
   }
 };
 
@@ -28,14 +39,11 @@ const Dashboard = () => {
     <>
       <Tab />
       <ActiveInterface>
-        <Sidebar />
-
-        <Three>
-          <Base />
-          <Platform />
-        </Three>
+        <Base />
+        <Platform />
       </ActiveInterface>
     </>
   );
 };
+
 export default Dashboard;

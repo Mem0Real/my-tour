@@ -12,6 +12,8 @@ import { CursorTypes } from '@/utils/constants';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
 
+const items = ['Wall', 'Door', 'Window'];
+
 export const Sidebar = () => {
   const [insert, setInsert] = useAtom(insertAtom);
   const [isCollapsed, setIsCollapsed] = useAtom(toolsCollapsedAtom);
@@ -20,8 +22,6 @@ export const Sidebar = () => {
   const activeTool = useAtomValue(activeToolAtom);
 
   const setCursor = useSetAtom(cursorTypeAtom);
-
-  const { sidebarItems } = useToolInput();
 
   useEffect(() => {
     if (activeTool !== 'add') setIsCollapsed(true);
@@ -46,17 +46,17 @@ export const Sidebar = () => {
       {/* Sidebar Content */}
       <div className={`${isCollapsed ? 'w-0 p-0 overflow-hidden' : 'w-32 p-4'} transition-all duration-200`}>
         <ul className='space-y-2'>
-          {sidebarItems?.map((item, i) => (
-            <li key={item.label.concat(`-${i}`)}>
+          {items?.map((item, i) => (
+            <li key={item.concat(`-${i}`)}>
               <button
                 className={`w-full text-left px-4 py-2 rounded-md transition-colors duration-200 cursor-pointer ${
-                  insert === item.label.toLowerCase()
+                  insert === item.toLowerCase()
                     ? 'ring-2 dark:ring-neutral-800/40 rounded-lg'
-                    : 'hover:ring hover:ring-neutral-200 dark:hover:ring-neutral-700 dark:hover:text-neutral-300'
+                    : 'hover:ring hover:ring-neutral-200 dark:hover:ring-neutral-700 '
                 }`}
-                onClick={item.action}
+                onClick={() => setInsert(item.toLowerCase())}
               >
-                {item.label}
+                {item}
               </button>
             </li>
           ))}

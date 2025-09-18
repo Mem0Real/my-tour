@@ -6,6 +6,7 @@ import { snapCuesAtom } from '@/utils/atoms/drawing';
 import { SnapCues } from '@/3D/dashboard/components/SnapCues';
 import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
 import { WallChains } from '@/3D/dashboard/components/WallChains';
+import { Three } from '@/3D/base/Three';
 
 export const Platform = () => {
   const snapCues = useAtomValue(snapCuesAtom);

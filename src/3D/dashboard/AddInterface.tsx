@@ -45,6 +45,12 @@ export const AddInterface = ({ children }: Children) => {
       if (currentLoop.length <= 1) setIsDrawing(false);
     }
   };
+
+  // Set the initial tool to be add
+  useEffect(() => {
+    setInsert('wall');
+  }, []);
+
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -58,9 +64,11 @@ export const AddInterface = ({ children }: Children) => {
     if (e?.button === 2) setDragging(false);
   };
 
-  const handleBoardClick = (e: any) => {
-    if (!e || !e.point || e.button === 2 || insert !== 'Wall') return;
-    if (cameraType !== CameraTypes.ORTHOGRAPHIC && !e.shiftKey) return;
+  const handlePointerDown = (e: any) => {
+    if (!e || !e.point || e.button === 2) return;
+    if (cameraType !== CameraTypes.ORTHOGRAPHIC) return;
+
+    console.log('pd');
 
     let clicked = e.point.clone();
     clicked.y = 0;
@@ -146,19 +154,12 @@ export const AddInterface = ({ children }: Children) => {
     [isDrawing, dragging, currentLoop, walls, setPreviewPoint, setSnapCues]
   );
 
-  const items = [
-    { label: 'Wall', action: () => setInsert('wall') },
-    { label: 'Door', action: () => setInsert('door') },
-    { label: 'Window', action: () => setInsert('window') },
-  ];
-
   const handlers = {
-    onPointerDown: handleBoardClick,
+    onPointerDown: handlePointerDown,
     onPointerUp: handlePointerUp,
     onPointerMove: handlePointerMove,
     onRightClick: handleRightClick,
     onKeyDown: handleKeyDown,
-    sidebarItems: items,
   };
 
   const drawPoints: THREE.Vector3[] = currentLoop.map((p) => p.pos);
