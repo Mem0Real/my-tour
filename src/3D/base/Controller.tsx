@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { FirstPersonControls, OrbitControls, Wireframe } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import { MOUSE } from 'three';
 
 import { useAtomValue } from 'jotai';
@@ -9,7 +9,7 @@ import { CameraTypes } from '@/utils/constants';
 
 export const Controller = ({ enablePan = true, enableRotate = false }) => {
   const cameraType = useAtomValue(cameraTypeAtom);
-  const { ORTHOGRAPHIC, FPS } = CameraTypes;
+  const { ORTHOGRAPHIC } = CameraTypes;
 
   let mouseButtons;
 
@@ -19,9 +19,7 @@ export const Controller = ({ enablePan = true, enableRotate = false }) => {
     mouseButtons = { LEFT: MOUSE.PAN, RIGHT: MOUSE.ROTATE };
   }
 
-  return cameraType === FPS ? (
-    <FirstPersonControls makeDefault />
-  ) : (
+  return (
     <OrbitControls
       enableRotate={enableRotate || !(cameraType === ORTHOGRAPHIC)}
       enablePan={enablePan}

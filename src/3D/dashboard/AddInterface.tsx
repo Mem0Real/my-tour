@@ -191,8 +191,8 @@ export const AddInterface = ({ children }: Children) => {
               thickness={WALL_THICKNESS}
               height={WALL_HEIGHT}
               color='white'
-              prevDir={prevDir}
-              nextDir={nextDir}
+              // prevDir={prevDir}
+              // nextDir={nextDir}
             />
             {i === currentLoop.length - 1 && previewPoint && (
               <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />

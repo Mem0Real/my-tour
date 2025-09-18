@@ -16,9 +16,9 @@ const ActiveInterface = ({ children }: Children) => {
   const [activeTool] = useAtom(activeToolAtom);
 
   switch (activeTool) {
-    case 'Add':
+    case 'add':
       return <AddInterface>{children}</AddInterface>;
-    case 'Edit':
+    case 'edit':
       return <EditInterface>{children}</EditInterface>;
   }
 };

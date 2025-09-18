@@ -21,11 +21,9 @@ export const WallChains = () => {
     // Compute prevDir & nextDir for the miter logic
     const prevDir =
       i > 0
-        ? new THREE.Vector3()
-            .subVectors(start, walls[i - 1][0])
-            .setY(0)
-            // .normalize()
-        : null;
+        ? new THREE.Vector3().subVectors(start, walls[i - 1][0]).setY(0)
+        : // .normalize()
+          null;
     const nextDir =
       i < walls.length - 1
         ? new THREE.Vector3()
@@ -43,8 +41,8 @@ export const WallChains = () => {
           thickness={WALL_THICKNESS}
           height={WALL_HEIGHT}
           color={'lightgrey'}
-          prevDir={prevDir}
-          nextDir={nextDir}
+          // prevDir={prevDir}
+          // nextDir={nextDir}
         />
         {cameraType === CameraTypes.ORTHOGRAPHIC && (
           <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />

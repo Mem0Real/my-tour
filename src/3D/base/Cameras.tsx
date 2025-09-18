@@ -32,10 +32,10 @@ export const Cameras = () => {
     }
   }, [camera, cameraType]);
 
-  const { PERSPECTIVE, FPS, ORTHOGRAPHIC } = CameraTypes;
+  const { PERSPECTIVE, ORTHOGRAPHIC } = CameraTypes;
 
   switch (cameraType) {
-    case PERSPECTIVE | FPS:
+    case PERSPECTIVE:
       return <PerspectiveCamera makeDefault fov={60} near={0.1} far={50} />;
     case ORTHOGRAPHIC:
       return (
