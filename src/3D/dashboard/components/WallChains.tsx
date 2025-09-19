@@ -19,7 +19,7 @@ export const WallChains = () => {
 
   useEffect(() => {
     setWallColor(() => (activeWall ? { id: activeWall.id, color: 'lightblue' } : null));
-  }, [activeWall]);
+  }, [activeWall, walls]);
 
   const { handlePointerDown, handlePointerOver, handlePointerOut } = useToolInput();
 
@@ -42,13 +42,13 @@ export const WallChains = () => {
             .normalize()
         : null;
 
-    const wallData = { id: i, start, end };
+    // const wallData = { id: i, start, end };
 
     return (
       <group
         key={`wall-${i}`}
-        onPointerDown={(e) => handlePointerDown?.(e, wallData)}
-        onPointerOver={(e) => handlePointerOver?.(e, wallData)}
+        onPointerDown={(e) => handlePointerDown?.(e, { id: i, start, end })}
+        onPointerOver={(e) => handlePointerOver?.(e, { id: i, start, end })}
         onPointerOut={handlePointerOut}
       >
         <Wall
@@ -62,7 +62,7 @@ export const WallChains = () => {
           // nextDir={nextDir}
         />
         {cameraType === CameraTypes.ORTHOGRAPHIC && (
-          <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />
+          <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} walls={walls} />
         )}
       </group>
     );

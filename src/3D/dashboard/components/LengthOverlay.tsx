@@ -1,16 +1,18 @@
 import * as THREE from 'three';
 import { Line, Html, Text } from '@react-three/drei';
 import React from 'react';
+import { WallData, WallProps } from '@/utils/definitions';
 
 interface LengthOverlayProps {
   start: THREE.Vector3;
   end: THREE.Vector3;
   thickness?: number;
   visible?: boolean;
+  walls?: THREE.Vector3[][];
 }
 
 export const LengthOverlay: React.FC<LengthOverlayProps> = React.memo(
-  ({ start, end, thickness = 0.1, visible = false }) => {
+  ({ start, end, thickness = 0.1, visible = false, walls }) => {
     if (end.distanceTo(start) < 0.005) return null;
 
     const dir = new THREE.Vector3().subVectors(end, start).normalize();

@@ -100,7 +100,7 @@ export const AddInterface = ({ children }: Children) => {
 
     if (nearFirstPoint) {
       const newWalls = currentLoop
-        .concat([newPointData])
+        // .concat([newPointData])
         .map((p, i, arr) => [p.pos, arr[(i + 1) % arr.length].pos] as [THREE.Vector3, THREE.Vector3]);
 
       setWalls([...walls, ...newWalls]);
