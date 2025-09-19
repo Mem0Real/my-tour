@@ -58,6 +58,7 @@ export const WallChains = () => {
           thickness={WALL_THICKNESS}
           height={WALL_HEIGHT}
           color={wallColor?.id === i ? wallColor.color : '#e2e2e2'}
+          walls={walls}
           // prevDir={prevDir}
           // nextDir={nextDir}
         />

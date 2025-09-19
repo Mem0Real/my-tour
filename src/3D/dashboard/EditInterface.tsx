@@ -6,8 +6,8 @@ import * as THREE from 'three';
 
 import { Three } from '@/3D/base/Three';
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
-import { cursorTypeAtom } from '@/utils/atoms/ui';
-import { CursorTypes, SNAP_TOLERANCE } from '@/utils/constants';
+import { cameraTypeAtom, cursorTypeAtom } from '@/utils/atoms/ui';
+import { CameraTypes, CursorTypes, SNAP_TOLERANCE } from '@/utils/constants';
 import { Children, WallData } from '@/utils/definitions';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { activeWallAtom, wallsAtom } from '@/utils/atoms/drawing';
@@ -16,6 +16,9 @@ import { ThreeEvent } from '@react-three/fiber';
 export function EditInterface({ children }: Children) {
   const [walls, setWalls] = useAtom(wallsAtom);
   const [activeWall, setActiveWall] = useAtom(activeWallAtom);
+
+  const cameraType = useAtomValue(cameraTypeAtom);
+
   const [initialPos, setInitialPos] = useState<THREE.Vector3 | null>(null);
 
   const setCursor = useSetAtom(cursorTypeAtom);
@@ -26,6 +29,7 @@ export function EditInterface({ children }: Children) {
 
   const handlePointerDown = (e: ThreeEvent<MouseEvent>, wallData?: WallData) => {
     if (!wallData || !e.point || e.button === 2) return;
+    if (cameraType !== CameraTypes.ORTHOGRAPHIC) return;
 
     setActiveWall(wallData);
     setInitialPos(e.point.clone());
@@ -40,6 +44,7 @@ export function EditInterface({ children }: Children) {
 
   const handlePointerMove = (e: ThreeEvent<MouseEvent>) => {
     if (!e?.point || !activeWall || !initialPos) return;
+    if (cameraType !== CameraTypes.ORTHOGRAPHIC) return;
 
     const cursor = e.point.clone();
     cursor.y = 0;
@@ -110,6 +115,7 @@ export function EditInterface({ children }: Children) {
 
   const handlePointerOver = (e: MouseEvent, wallData?: WallData) => {
     if (!wallData) return;
+    if (cameraType !== CameraTypes.ORTHOGRAPHIC) return;
 
     const { start, end } = wallData;
 

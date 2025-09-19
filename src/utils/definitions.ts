@@ -23,6 +23,7 @@ export interface WallProps {
   color?: string;
   hovered?: boolean;
   visible?: boolean;
+  walls?: [THREE.Vector3, THREE.Vector3][];
 
   prevDir?: THREE.Vector3 | null;
   nextDir?: THREE.Vector3 | null;
