@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import * as THREE from 'three';
 
 import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
@@ -15,7 +15,13 @@ export const WallChains = () => {
   const cameraType = useAtomValue(cameraTypeAtom);
   const activeWall = useAtomValue(activeWallAtom);
 
-  const { handlePointerDown } = useToolInput();
+  const [wallColor, setWallColor] = useState<{ id: number; color: string } | null>(null);
+
+  useEffect(() => {
+    setWallColor(() => (activeWall ? { id: activeWall.id, color: 'lightblue' } : null));
+  }, [activeWall]);
+
+  const { handlePointerDown, handlePointerOver, handlePointerOut } = useToolInput();
 
   return walls.map(([start, end], i) => {
     if (!end) return null;
@@ -36,15 +42,22 @@ export const WallChains = () => {
             .normalize()
         : null;
 
+    const wallData = { id: i, start, end };
+
     return (
-      <group key={`wall-${i}`} onPointerDown={(e) => handlePointerDown?.(e, { id: i, start, end })}>
+      <group
+        key={`wall-${i}`}
+        onPointerDown={(e) => handlePointerDown?.(e, wallData)}
+        onPointerOver={(e) => handlePointerOver?.(e, wallData)}
+        onPointerOut={handlePointerOut}
+      >
         <Wall
           id={i}
           start={start}
           end={end}
           thickness={WALL_THICKNESS}
           height={WALL_HEIGHT}
-          color={'#e2e2e2'}
+          color={wallColor?.id === i ? wallColor.color : '#e2e2e2'}
           // prevDir={prevDir}
           // nextDir={nextDir}
         />

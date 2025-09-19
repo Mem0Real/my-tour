@@ -19,14 +19,6 @@ export const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useAtom(toolsCollapsedAtom);
 
   const keyPressed = useAtomValue(keyPressedAtom);
-  const activeTool = useAtomValue(activeToolAtom);
-
-  const setCursor = useSetAtom(cursorTypeAtom);
-
-  useEffect(() => {
-    if (activeTool !== 'add') setIsCollapsed(true);
-    else setCursor(insert ? CursorTypes.CROSS : CursorTypes.DEFAULT);
-  }, [insert, activeTool]);
 
   useEffect(() => {
     if (!keyPressed) return;

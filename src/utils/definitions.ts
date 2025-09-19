@@ -62,6 +62,9 @@ export type ToolHandlers = {
 
   // Edit
   handlePointerDown?: (e: any, wallData?: WallData) => void;
-  handlePointerOver?: (e: any) => void;
   handleRightClick?: (e: any) => void;
+  handlePointerOver?: (e: any, wallData?: WallData) => void;
+  handlePointerOut?: () => void;
+  handlePointerMove?: (e: any) => void;
+  handlePointerUp?: () => void;
 };

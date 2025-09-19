@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import * as THREE from 'three';
 
-import { cameraTypeAtom, insertAtom } from '@/utils/atoms/ui';
+import { cameraTypeAtom, cursorTypeAtom, insertAtom } from '@/utils/atoms/ui';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { isDrawingAtom, previewPointAtom, snapCuesAtom, wallsAtom } from '@/utils/atoms/drawing';
 
@@ -11,6 +11,7 @@ import { Children, LoopPoint, ToolHandlers } from '@/utils/definitions';
 import { computeWinding, snapToPoints, straighten } from '@/3D/helpers/wallHelper';
 import {
   CameraTypes,
+  CursorTypes,
   SNAP_DISTANCE,
   SNAP_TOLERANCE,
   STRAIGHT_THRESHOLD,
@@ -27,6 +28,7 @@ export const AddInterface = ({ children }: Children) => {
   // const [loops, setLoops] = useAtom(loopsAtom);
   const [walls, setWalls] = useAtom(wallsAtom);
   const [insert, setInsert] = useAtom(insertAtom);
+  const setCursor = useSetAtom(cursorTypeAtom);
 
   const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
   const [previewPoint, setPreviewPoint] = useAtom(previewPointAtom);
@@ -49,6 +51,7 @@ export const AddInterface = ({ children }: Children) => {
   // Set the initial tool to be add
   useEffect(() => {
     setInsert('wall');
+    setCursor(CursorTypes.CROSS);
   }, []);
 
   useEffect(() => {
@@ -67,8 +70,6 @@ export const AddInterface = ({ children }: Children) => {
   const handlePointerDown = (e: any) => {
     if (!e || !e.point || e.button === 2) return;
     if (cameraType !== CameraTypes.ORTHOGRAPHIC) return;
-
-    console.log('pd');
 
     let clicked = e.point.clone();
     clicked.y = 0;
@@ -130,7 +131,7 @@ export const AddInterface = ({ children }: Children) => {
 
   const handlePointerMove = useCallback(
     (e: any) => {
-      if (!e?.point || dragging || !isDrawing) return;
+      if (!e?.point || !isDrawing) return;
       if (cameraType !== CameraTypes.ORTHOGRAPHIC && !e.shiftKey) return;
 
       const cursor = e.point.clone();

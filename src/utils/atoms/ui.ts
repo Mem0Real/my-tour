@@ -13,6 +13,6 @@ export const keyPressedAtom = atom<string | null>(null);
 
 // Add UI
 export const insertAtom = atom<string | null>(null);
-export const toolsCollapsedAtom = atom<boolean>(false);
+export const toolsCollapsedAtom = atomWithStorage<boolean>('collapsed', true);
 
 // Edit UI

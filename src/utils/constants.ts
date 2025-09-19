@@ -10,6 +10,8 @@ export enum CursorTypes {
   GRAB = 'grab',
   GRABBING = 'grabbing',
   PENCIL = 'url("/pencil.svg") 0 24, auto',
+  UPDOWN = 'n-resize',
+  LEFTRIGHT = 'e-resize'
 }
 
 export const WALL_THICKNESS = 0.1;

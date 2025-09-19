@@ -40,7 +40,7 @@ export const Wall: FC<WallProps> = ({
   return (
     <mesh position={[mid.x, height / 2, mid.z]} rotation={[0, -angle, 0]}>
       <boxGeometry args={[length, height, thickness * 2]} />
-      <meshStandardMaterial color={color} opacity={0.5} transparent />
+      <meshStandardMaterial color={color} opacity={1} transparent />
     </mesh>
   );
 };
