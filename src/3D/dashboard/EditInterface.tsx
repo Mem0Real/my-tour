@@ -47,30 +47,27 @@ export function EditInterface({ children }: Children) {
     const updatedWalls = [...walls];
 
     const wallIdx = updatedWalls.findIndex((_, i) => i === activeWall.id);
+    const currentWall = updatedWalls[wallIdx];
+
+    updatedWalls[wallIdx].map((wall) => {
+      wall.x += cursor.x - initialPos.x;
+      wall.z += cursor.z - initialPos.z;
+    });
 
     /* TODO Find connected points & update them as well. For now, I'm using index but that wont cover all basis */
 
-    const width = Math.abs(activeWall.start.x - activeWall.end.x);
-    const height = Math.abs(activeWall.start.z - activeWall.end.z);
-
-    updatedWalls[wallIdx].map((wall) => {
-      wall.x = cursor.x + width / 2;
-      wall.z = cursor.z + height / 2;
-    });
-
-    const currentWall = updatedWalls[wallIdx];
-
     if (updatedWalls[wallIdx - 1]?.length > 1) {
-      updatedWalls[wallIdx - 1][1].x = currentWall[1].x;
-      updatedWalls[wallIdx - 1][1].z = currentWall[1].z;
+      updatedWalls[wallIdx - 1][1].x = currentWall[0].x;
+      updatedWalls[wallIdx - 1][1].z = currentWall[0].z;
     }
 
     if (updatedWalls[wallIdx + 1]?.length > 1) {
-      updatedWalls[wallIdx + 1][0].x = currentWall[0].x;
-      updatedWalls[wallIdx + 1][0].z = currentWall[0].z;
+      updatedWalls[wallIdx + 1][0].x = currentWall[1].x;
+      updatedWalls[wallIdx + 1][0].z = currentWall[1].z;
     }
 
     setWalls(updatedWalls);
+    setInitialPos(cursor);
   };
 
   // Accidentally might have figured out joint drag (not quite though)
