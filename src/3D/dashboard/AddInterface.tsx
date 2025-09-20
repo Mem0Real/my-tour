@@ -5,9 +5,9 @@ import * as THREE from 'three';
 
 import { cameraTypeAtom, cursorTypeAtom, insertAtom } from '@/utils/atoms/ui';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { isDrawingAtom, previewPointAtom, snapCuesAtom, wallsAtom } from '@/utils/atoms/drawing';
+import { isDrawingAtom, previewPointAtom, snapCuesAtom, roomsAtom } from '@/utils/atoms/drawing';
 
-import { Children, LoopPoint, ToolHandlers } from '@/utils/definitions';
+import { Children, LoopPoint } from '@/utils/definitions';
 import { snapToPoints, straighten } from '@/3D/helpers/wallHelper';
 import {
   CameraTypes,
@@ -25,16 +25,14 @@ import { LengthOverlay } from '@/3D/dashboard/components/LengthOverlay';
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
 
 export const AddInterface = ({ children }: Children) => {
-  // const [loops, setLoops] = useAtom(loopsAtom);
-  const [walls, setWalls] = useAtom(wallsAtom);
-  const [insert, setInsert] = useAtom(insertAtom);
+  const [rooms, setRooms] = useAtom(roomsAtom);
+  const setInsert = useSetAtom(insertAtom);
   const setCursor = useSetAtom(cursorTypeAtom);
 
   const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
   const [previewPoint, setPreviewPoint] = useAtom(previewPointAtom);
 
   const cameraType = useAtomValue(cameraTypeAtom);
-
   const setSnapCues = useSetAtom(snapCuesAtom);
 
   const [currentLoop, setCurrentLoop] = useState<LoopPoint[]>([]);
@@ -48,11 +46,10 @@ export const AddInterface = ({ children }: Children) => {
     }
   };
 
-  // Set the initial tool to be add
   useEffect(() => {
     setInsert('wall');
     setCursor(CursorTypes.CROSS);
-  }, []);
+  }, [setInsert, setCursor]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -71,17 +68,17 @@ export const AddInterface = ({ children }: Children) => {
     if (!e || !e.point || e.button === 2) return;
     if (cameraType !== CameraTypes.ORTHOGRAPHIC) return;
 
-    let clicked = e.point.clone();
+    const clicked = e.point.clone();
     clicked.y = 0;
 
-    const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+    // Flatten all walls from all rooms for snapping purposes
+    const allWalls = rooms.flat();
 
     const currentLoopPositions = currentLoop.map((p) => p.pos);
     const { snappedPoint, snappedWall } = snapToPoints(clicked, currentLoopPositions, allWalls, SNAP_TOLERANCE);
 
     const pointData: LoopPoint = { pos: snappedPoint.clone(), snappedWall };
 
-    // Start drawing if not already
     if (!isDrawing) {
       setCurrentLoop([pointData]);
       setIsDrawing(true);
@@ -92,7 +89,6 @@ export const AddInterface = ({ children }: Children) => {
     const firstPoint = currentLoop[0];
     const lastPoint = currentLoop[currentLoop.length - 1];
 
-    // Straighten relative to last point
     const newPos = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
     const newPointData: LoopPoint = { pos: newPos, snappedWall: snappedWall || undefined };
 
@@ -100,10 +96,10 @@ export const AddInterface = ({ children }: Children) => {
 
     if (nearFirstPoint) {
       const newWalls = currentLoop
-        // .concat([newPointData])
         .map((p, i, arr) => [p.pos, arr[(i + 1) % arr.length].pos] as [THREE.Vector3, THREE.Vector3]);
 
-      setWalls([...walls, ...newWalls]);
+      // Add new room by pushing newWalls array
+      setRooms([...rooms, newWalls]);
 
       setCurrentLoop([]);
       setPreviewPoint(null);
@@ -117,14 +113,13 @@ export const AddInterface = ({ children }: Children) => {
         .map((p, i, arr) => [p.pos, arr[i + 1]?.pos].filter(Boolean) as THREE.Vector3[])
         .filter((seg) => seg.length === 2) as [THREE.Vector3, THREE.Vector3][];
 
-      setWalls([...walls, ...newWalls]);
+      setRooms([...rooms, newWalls]);
       setCurrentLoop([]);
       setPreviewPoint(null);
       setIsDrawing(false);
       return;
     }
 
-    // Otherwise, just continue adding points
     setCurrentLoop([...currentLoop, newPointData]);
     setPreviewPoint(null);
   };
@@ -137,14 +132,9 @@ export const AddInterface = ({ children }: Children) => {
       const cursor = e.point.clone();
       cursor.y = 0;
 
-      const allWalls = walls.map(([start, end]) => [start, end] as [THREE.Vector3, THREE.Vector3]);
+      const allWalls = rooms.flat();
 
-      const { snappedPoint } = snapToPoints(
-        cursor,
-        currentLoop.map((p) => p.pos),
-        allWalls,
-        SNAP_TOLERANCE
-      );
+      const { snappedPoint } = snapToPoints(cursor, currentLoop.map((p) => p.pos), allWalls, SNAP_TOLERANCE);
 
       const lastPoint = currentLoop[currentLoop.length - 1];
       const straightened = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
@@ -152,7 +142,7 @@ export const AddInterface = ({ children }: Children) => {
       setPreviewPoint(straightened);
       setSnapCues([snappedPoint]);
     },
-    [isDrawing, dragging, currentLoop, walls, setPreviewPoint, setSnapCues]
+    [isDrawing, dragging, currentLoop, rooms, setPreviewPoint, setSnapCues, cameraType]
   );
 
   const handlers = {
@@ -163,9 +153,6 @@ export const AddInterface = ({ children }: Children) => {
     onKeyDown: handleKeyDown,
   };
 
-  const drawPoints: THREE.Vector3[] = currentLoop.map((p) => p.pos);
-  if (previewPoint) drawPoints.push(previewPoint);
-
   return (
     <ToolInputProvider value={handlers}>
       {children}
@@ -175,13 +162,10 @@ export const AddInterface = ({ children }: Children) => {
 
         if (!end) return null;
 
-        // Determine prevDir for the offset logic
+        // Determine dirs for offset if needed
         const prevDir =
           i > 0
-            ? new THREE.Vector3()
-                .subVectors(start, currentLoop[i - 1].pos)
-                .setY(0)
-                .normalize()
+            ? new THREE.Vector3().subVectors(start, currentLoop[i - 1].pos).setY(0).normalize()
             : null;
         const nextDir =
           i < currentLoop.length - 1
@@ -199,7 +183,7 @@ export const AddInterface = ({ children }: Children) => {
               end={end}
               thickness={WALL_THICKNESS}
               height={WALL_HEIGHT}
-              color='white'
+              color="white"
               // prevDir={prevDir}
               // nextDir={nextDir}
             />

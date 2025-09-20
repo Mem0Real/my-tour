@@ -1,4 +1,4 @@
-import { SnapResult } from '@/utils/definitions';
+import { SnapResult, Wall } from '@/utils/definitions';
 import * as THREE from 'three';
 
 // Snaps point to horizontal or vertical if close enough
@@ -16,7 +16,7 @@ export const straighten = (from: THREE.Vector3, to: THREE.Vector3, straightThres
 export const snapToPoints = (
   cursor: THREE.Vector3,
   currentLoopPositions: THREE.Vector3[],
-  allWalls: [THREE.Vector3, THREE.Vector3][],
+  allWalls: Wall[],
   tolerance: number
 ): SnapResult => {
   let snappedPoint = cursor.clone();

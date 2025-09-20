@@ -5,7 +5,7 @@ import { snapCuesAtom } from '@/utils/atoms/drawing';
 
 import { SnapCues } from '@/3D/dashboard/components/SnapCues';
 import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
-import { WallChains } from '@/3D/dashboard/components/WallChains';
+import { RoomRenderer } from '@/3D/dashboard/components/RoomsRenderer';
 import { activeToolAtom } from '@/utils/atoms/ui';
 
 export const Platform = () => {
@@ -35,7 +35,6 @@ export const Platform = () => {
           onPointerDown?.(e);
           onRightClick?.(e);
         }}
-        // onPointerMove={onPointerMove ?? undefined}
         onPointerMove={handlePlatformMove}
         onPointerUp={activeTool === 'add' ? onPointerUp : activeTool === 'edit' ? handlePointerUp : undefined}
       >
@@ -44,7 +43,7 @@ export const Platform = () => {
       </mesh>
 
       {/* Rendered walls */}
-      <WallChains />
+      <RoomRenderer />
 
       {/* Snap cues */}
       <SnapCues points={snapCues} />

@@ -4,6 +4,10 @@ export interface Children {
   children: React.ReactNode;
 }
 
+export type Wall = [THREE.Vector3, THREE.Vector3];
+
+export type Room = Wall[];
+
 export interface LoopPoint {
   pos: THREE.Vector3;
   snappedWall?: [THREE.Vector3, THREE.Vector3] | null;
@@ -15,24 +19,21 @@ export interface SnapResult {
 }
 
 export interface WallProps {
-  id: number;
   start: THREE.Vector3;
   end: THREE.Vector3;
   thickness?: number;
   height?: number;
   color?: string;
-  hovered?: boolean;
-  visible?: boolean;
-  walls?: [THREE.Vector3, THREE.Vector3][];
-
   prevDir?: THREE.Vector3 | null;
   nextDir?: THREE.Vector3 | null;
+  roomIndex?: number; // added roomIndex for context if needed
+  id?: number; // wall index if needed
+  walls?: [THREE.Vector3, THREE.Vector3][]; // optional full walls array
 
   onPointerDown?: (e: any) => void;
 }
 
 export interface WallData {
-  id: number;
   start: THREE.Vector3;
   end: THREE.Vector3;
 }
@@ -48,9 +49,15 @@ export interface JointProps {
 }
 
 export interface EndpointRef {
+  roomIndex: number;
   wallIndex: number;
   pointIndex: 0 | 1;
   pos: THREE.Vector3 | null;
+}
+
+export interface ActiveWallData extends WallData {
+  roomIndex: number;
+  wallIndex: number;
 }
 
 export type ToolHandlers = {
@@ -62,9 +69,9 @@ export type ToolHandlers = {
   onKeyDown?: (e: KeyboardEvent) => void;
 
   // Edit
-  handlePointerDown?: (e: any, wallData?: WallData) => void;
+  handlePointerDown?: (e: any, wallData?: ActiveWallData) => void;
   handleRightClick?: (e: any) => void;
-  handlePointerOver?: (e: any, wallData?: WallData) => void;
+  handlePointerOver?: (e: any, wallData?: ActiveWallData) => void;
   handlePointerOut?: () => void;
   handlePointerMove?: (e: any) => void;
   handlePointerUp?: () => void;
