@@ -33,13 +33,14 @@ export function EditInterface({ children }: Children) {
 
     setActiveWall(wallData);
     setInitialPos(e.point.clone());
+    setCursor(CursorTypes.GRABBING);
   };
 
   const handlePointerUp = () => {
     if (!activeWall) return;
 
-    setCursor(CursorTypes.POINTER);
     setActiveWall(null);
+    setCursor((prev) => (prev === CursorTypes.GRABBING ? CursorTypes.GRAB : CursorTypes.POINTER));
   };
 
   const handlePointerMove = (e: ThreeEvent<MouseEvent>) => {
@@ -122,7 +123,8 @@ export function EditInterface({ children }: Children) {
     const dir = new THREE.Vector3().subVectors(end, start).normalize();
     const isHorizontal = Math.abs(dir.x) > Math.abs(dir.z);
 
-    setCursor(isHorizontal ? CursorTypes.UPDOWN : CursorTypes.LEFTRIGHT);
+    // setCursor(isHorizontal ? CursorTypes.UPDOWN : CursorTypes.LEFTRIGHT);
+    !activeWall && setCursor(CursorTypes.GRAB);
     // setActiveWall((prev) => (prev?.id === wallData.id ? null : wallData));
   };
 

@@ -8,7 +8,7 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { isDrawingAtom, previewPointAtom, snapCuesAtom, wallsAtom } from '@/utils/atoms/drawing';
 
 import { Children, LoopPoint, ToolHandlers } from '@/utils/definitions';
-import { computeWinding, snapToPoints, straighten } from '@/3D/helpers/wallHelper';
+import { snapToPoints, straighten } from '@/3D/helpers/wallHelper';
 import {
   CameraTypes,
   CursorTypes,
