@@ -101,8 +101,28 @@ export function EditInterface({ children }: Children) {
 
     // Update continuity in the room loop
     const roomLength = room.length;
-    if (wallIndex === 0 && room[roomLength - 1][1].equals(initStart)) {
-      room[roomLength - 1][1] = newStart.clone();
+
+    /* 
+    Four options
+    i) Moving first wall 
+    -> check if last wall is connected 
+      if true => Update last wall's end point
+    -> check if second wall is connected
+      if true => Update second wall's first point
+
+    
+    ii) Moving last wall. 
+    -> check if first wall is connected
+      if true => Update first wall's start point and last - 1 wall's end point
+    iii) Moving others. Update +- currentWalls start & end points respectively
+
+
+    => Problem is, any wall can be disconnected from its' previous/next wall so
+    */
+
+    // Moving first wall
+    if(wallIndex === 0) {
+
     }
     if (wallIndex === roomLength - 1 && room[0][0].equals(initEnd)) {
       room[0][0] = newEnd.clone();
@@ -111,7 +131,10 @@ export function EditInterface({ children }: Children) {
       room[wallIndex - 1][1] = newStart.clone();
     }
     if (wallIndex < roomLength - 1) {
-      room[wallIndex + 1][0] = newEnd.clone();
+      if (wallIndex === 0) {
+        room[roomLength - 1][1] = newStart.clone();
+        room[1][0] = newEnd.clone();
+      } else room[wallIndex + 1][0] = newEnd.clone();
     }
 
     updatedRooms[roomIndex] = room;

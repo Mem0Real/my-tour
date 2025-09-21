@@ -1,29 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import {
-  activeToolAtom,
-  cursorTypeAtom,
-  insertAtom,
-  keyPressedAtom,
-  numberPressedAtom,
-  toolsCollapsedAtom,
-} from '@/utils/atoms/ui';
-import { CursorTypes } from '@/utils/constants';
+import React from 'react';
+import { useAtom } from 'jotai';
+import { insertAtom, toolsCollapsedAtom } from '@/utils/atoms/ui';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
 
 const items = ['Wall', 'Door', 'Window'];
 
 export const Sidebar = () => {
   const [insert, setInsert] = useAtom(insertAtom);
   const [isCollapsed, setIsCollapsed] = useAtom(toolsCollapsedAtom);
-
-  const keyPressed = useAtomValue(keyPressedAtom);
-
-  useEffect(() => {
-    if (!keyPressed) return;
-    if (keyPressed === 'q') setIsCollapsed((prev) => !prev);
-  }, [keyPressed]);
 
   return (
     <div className='fixed left-0 top-1/3 -translate-y-1/2 w-fit  bg-neutral-800/80 text-neutral-200 dark:bg-neutral-200/80 shadow-lg shadow-neutral-600 border-r border-t border-neutral-500 dark:text-neutral-900 rounded-r-sm transition-all duration-300 ease-in-out z-10 py-2'>

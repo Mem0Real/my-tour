@@ -56,7 +56,7 @@ export const WallEndPoints = ({ wallIndex, roomIndex, start, end }: WallEndPoint
       onPointerOut={handleEndOut}
     >
       <sphereGeometry args={[0.1]} /> {/* Adjust sphere size */}
-      <meshStandardMaterial color={activeTool === 'edit' ? 'darkgray' : '#e2e2e2'} opacity={0.6} />
+      <meshStandardMaterial color={'#e2e2e2'} opacity={0.6} />
     </mesh>
   ));
 };

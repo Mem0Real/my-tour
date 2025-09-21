@@ -8,7 +8,6 @@ export const cursorTypeAtom = atom<string>(CursorTypes.DEFAULT);
 export const activeToolAtom = atom<string>('add');
 
 // Keyboard Items
-export const numberPressedAtom = atom<number>(0);
 export const keyPressedAtom = atom<string | null>(null);
 
 // Add UI

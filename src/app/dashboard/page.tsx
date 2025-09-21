@@ -11,6 +11,7 @@ import { Base } from '@/3D/dashboard/components/Base';
 import { Platform } from '@/3D/dashboard/Platform';
 import { Children } from '@/utils/definitions';
 import { Three } from '@/3D/base/Three';
+import { KeyboardListener } from '@/app/dashboard/components/KeyboardListener';
 
 const ActiveInterface = ({ children }: Children) => {
   const [activeTool] = useAtom(activeToolAtom);
@@ -37,7 +38,9 @@ const ActiveInterface = ({ children }: Children) => {
 const Dashboard = () => {
   return (
     <>
+      <KeyboardListener />
       <Tab />
+      
       <ActiveInterface>
         <Base />
         <Platform />

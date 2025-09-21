@@ -1,23 +1,14 @@
 'use client';
 
-import { cameraTypeAtom, keyPressedAtom, numberPressedAtom } from '@/utils/atoms/ui';
+import { cameraTypeAtom } from '@/utils/atoms/ui';
 import { CameraTypes } from '@/utils/constants';
-import { useAtomValue, useSetAtom } from 'jotai';
-import React, { useEffect } from 'react';
+import { useSetAtom } from 'jotai';
+import React from 'react';
 
 const { ORTHOGRAPHIC, PERSPECTIVE } = CameraTypes;
 
 export const Footer = () => {
   const setCameraType = useSetAtom(cameraTypeAtom);
-
-  const numberPressed = useAtomValue(numberPressedAtom);
-  const keyPressed = useAtomValue(keyPressedAtom);
-
-  useEffect(() => {
-    if (!numberPressed && !keyPressed) return;
-    if (numberPressed === 3 || keyPressed === 'f')
-      setCameraType((prev) => (prev === PERSPECTIVE ? ORTHOGRAPHIC : PERSPECTIVE));
-  }, [numberPressed, keyPressed]);
 
   return (
     <footer className='absolute bottom-20 left-1/2 z-50'>
