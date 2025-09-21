@@ -60,6 +60,11 @@ export interface ActiveWallData extends WallData {
   wallIndex: number;
 }
 
+export interface WallIdentifier {
+  index: number,
+  pos: 0 | 1
+}
+
 export type ToolHandlers = {
   // Add
   onPointerDown?: (e: any) => void;

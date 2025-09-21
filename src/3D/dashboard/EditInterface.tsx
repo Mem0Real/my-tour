@@ -1,19 +1,21 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as THREE from 'three';
 
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
 import { cameraTypeAtom, cursorTypeAtom } from '@/utils/atoms/ui';
-import { CameraTypes, CursorTypes, SNAP_TOLERANCE } from '@/utils/constants';
-import { Children, WallData, ActiveWallData } from '@/utils/definitions';
+import { CameraTypes, CursorTypes } from '@/utils/constants';
+import { Children, ActiveWallData, Wall, WallIdentifier } from '@/utils/definitions';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { activeEndpointAtom, activeWallAtom, roomsAtom } from '@/utils/atoms/drawing';
 import { ThreeEvent } from '@react-three/fiber';
+import { getConnectedWalls, updateConnectedWalls } from '@/3D/helpers/wallHelper';
 
 export function EditInterface({ children }: Children) {
   const [initialCursorPos, setInitialCursorPos] = useState<THREE.Vector3 | null>(null);
-  const [initialWallPos, setInitialWallPos] = useState<[THREE.Vector3, THREE.Vector3] | []>([]);
+  const [initialWallPos, setInitialWallPos] = useState<Wall | []>([]);
+  const [connectedWalls, setConnectedWalls] = useState<WallIdentifier[]>([]);
 
   const [rooms, setRooms] = useAtom(roomsAtom);
   const [activeWall, setActiveWall] = useAtom(activeWallAtom); // { roomIndex, wallIndex, id, start, end }
@@ -34,6 +36,10 @@ export function EditInterface({ children }: Children) {
     setActiveWall(wallData);
     setInitialCursorPos(e.point.clone().setY(0));
     setInitialWallPos([wallData.start.clone(), wallData.end.clone()]);
+
+    // Track connected walls
+    const wallsToFollow = getConnectedWalls(rooms, wallData);
+    setConnectedWalls(wallsToFollow);
 
     setCursor(CursorTypes.GRABBING);
   };
@@ -82,8 +88,8 @@ export function EditInterface({ children }: Children) {
 
     const delta = new THREE.Vector3(cursor.x - initialCursorPos.x, 0, cursor.z - initialCursorPos.z);
 
-    let newStart = initStart.clone();
-    let newEnd = initEnd.clone();
+    const newStart = initStart.clone();
+    const newEnd = initEnd.clone();
 
     if (isHorizontal) {
       newStart.x = initStart.x;
@@ -121,20 +127,37 @@ export function EditInterface({ children }: Children) {
     */
 
     // Moving first wall
-    if(wallIndex === 0) {
+    // if (wallIndex === 0) {
+    //   // check if previous wall is connected
+    //   if (room[roomLength - 1][1].equals(initStart)) {
+    //     room[roomLength - 1][1] = newStart.clone();
+    //   }
+    // } else if (wallIndex === (roomLength - 1)) {
+    //   // Moving last wall
+    // }
 
-    }
-    if (wallIndex === roomLength - 1 && room[0][0].equals(initEnd)) {
-      room[0][0] = newEnd.clone();
-    }
-    if (wallIndex > 0) {
-      room[wallIndex - 1][1] = newStart.clone();
-    }
-    if (wallIndex < roomLength - 1) {
-      if (wallIndex === 0) {
-        room[roomLength - 1][1] = newStart.clone();
-        room[1][0] = newEnd.clone();
-      } else room[wallIndex + 1][0] = newEnd.clone();
+    // if (wallIndex === roomLength - 1 && room[0][0].equals(initEnd)) {
+    //   room[0][0] = newEnd.clone();
+    // }
+
+    // if (wallIndex > 0) {
+    //   room[wallIndex - 1][1] = newStart.clone();
+    // }
+
+    // if (wallIndex < roomLength - 1) {
+    //   if (wallIndex === 0) {
+    //     room[roomLength - 1][1] = newStart.clone();
+    //     room[1][0] = newEnd.clone();
+    //   } else room[wallIndex + 1][0] = newEnd.clone();
+    // }
+    // updatedRooms[roomIndex] = room;
+
+    if (connectedWalls.length) {
+      const updatedRoom = updateConnectedWalls(newStart, newEnd, room, connectedWalls);
+
+      updatedRooms[roomIndex] = updatedRoom;
+      setRooms(updatedRooms);
+      return;
     }
 
     updatedRooms[roomIndex] = room;

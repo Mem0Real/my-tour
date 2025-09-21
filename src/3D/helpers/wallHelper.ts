@@ -1,4 +1,4 @@
-import { SnapResult, Wall } from '@/utils/definitions';
+import { ActiveWallData, Room, SnapResult, Wall, WallData, WallIdentifier } from '@/utils/definitions';
 import * as THREE from 'three';
 
 // Snaps point to horizontal or vertical if close enough
@@ -107,12 +107,42 @@ export function getMiterOffset(thisWallDir: THREE.Vector3, neighborDir: THREE.Ve
   return thickness / 2 / Math.sin(angle / 2);
 }
 
-export const computeWinding = (points: THREE.Vector3[]): number => {
-  let sum = 0;
-  for (let i = 0; i < points.length; i++) {
-    const a = points[i];
-    const b = points[(i + 1) % points.length];
-    sum += (b.x - a.x) * (b.z + a.z);
-  }
-  return sum; // >0 = clockwise, <0 = counter-clockwise
+export const getConnectedWalls = (rooms: Room[], wallData: ActiveWallData) => {
+  const room = rooms[wallData.roomIndex];
+  const activeWall = room[wallData.wallIndex];
+  const [start, end] = activeWall;
+
+  const connectedWalls: WallIdentifier[] = [];
+
+  room.forEach((wall, i) => {
+    let wallIdentifier: WallIdentifier | null = null;
+
+    if (wall[0].equals(end)) {
+      wallIdentifier = { index: i, pos: 0 };
+    } else if (wall[1].equals(start)) wallIdentifier = { index: i, pos: 1 };
+
+    if (wallIdentifier) connectedWalls.push(wallIdentifier);
+  });
+
+  return connectedWalls;
+};
+
+export const updateConnectedWalls = (
+  newStart: THREE.Vector3,
+  newEnd: THREE.Vector3,
+  room: Room,
+  connectedWalls: WallIdentifier[]
+): Room => {
+  const focusedRoom = [...room];
+
+  connectedWalls.forEach((wallData) => {
+    const { index, pos } = wallData;
+    const wall = room[index];
+
+    wall[pos] = pos === 0 ? newEnd.clone() : newStart.clone();
+
+    focusedRoom[index] = wall;
+  });
+
+  return focusedRoom;
 };

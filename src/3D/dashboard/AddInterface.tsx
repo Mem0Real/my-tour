@@ -162,19 +162,6 @@ export const AddInterface = ({ children }: Children) => {
 
         if (!end) return null;
 
-        // Determine dirs for offset if needed
-        const prevDir =
-          i > 0
-            ? new THREE.Vector3().subVectors(start, currentLoop[i - 1].pos).setY(0).normalize()
-            : null;
-        const nextDir =
-          i < currentLoop.length - 1
-            ? new THREE.Vector3()
-                .subVectors(currentLoop[i + 2]?.pos || end, end)
-                .setY(0)
-                .normalize()
-            : null;
-
         return (
           <React.Fragment key={`current-${i}`}>
             <Wall
@@ -184,8 +171,6 @@ export const AddInterface = ({ children }: Children) => {
               thickness={WALL_THICKNESS}
               height={WALL_HEIGHT}
               color="white"
-              // prevDir={prevDir}
-              // nextDir={nextDir}
             />
             {i === currentLoop.length - 1 && previewPoint && (
               <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
