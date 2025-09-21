@@ -51,6 +51,9 @@ export function EditInterface({ children }: Children) {
     setActiveWall(null);
     setCursor((prev) => (prev === CursorTypes.GRABBING ? CursorTypes.GRAB : CursorTypes.POINTER));
     setInitialWallPos([]);
+
+    setConnectedWalls([]);
+
     setActiveEndpoint(null);
   };
 
@@ -105,6 +108,8 @@ export function EditInterface({ children }: Children) {
 
     room[wallIndex] = [newStart, newEnd];
 
+    updatedRooms[roomIndex] = room;
+
     // Update continuity in the room loop
     const roomLength = room.length;
 
@@ -153,15 +158,14 @@ export function EditInterface({ children }: Children) {
     // updatedRooms[roomIndex] = room;
 
     if (connectedWalls.length) {
-      const updatedRoom = updateConnectedWalls(newStart, newEnd, room, connectedWalls);
+      const finalizedRooms = updateConnectedWalls(roomIndex, newStart, newEnd, updatedRooms, connectedWalls);
 
-      updatedRooms[roomIndex] = updatedRoom;
+      // updatedRooms[roomIndex] = updatedRoom;
+      setRooms(finalizedRooms);
+    } else {
+      updatedRooms[roomIndex] = room;
       setRooms(updatedRooms);
-      return;
     }
-
-    updatedRooms[roomIndex] = room;
-    setRooms(updatedRooms);
   };
 
   // Move a single endpoint independently (dis-joint)

@@ -28,7 +28,7 @@ export interface WallProps {
   nextDir?: THREE.Vector3 | null;
   roomIndex?: number; // added roomIndex for context if needed
   id?: number; // wall index if needed
-  walls?: [THREE.Vector3, THREE.Vector3][]; // optional full walls array
+  rooms?: Room[]; // optional rooms array
 
   onPointerDown?: (e: any) => void;
 }
@@ -60,10 +60,7 @@ export interface ActiveWallData extends WallData {
   wallIndex: number;
 }
 
-export interface WallIdentifier {
-  index: number,
-  pos: 0 | 1
-}
+export interface WallIdentifier extends EndpointRef {}
 
 export type ToolHandlers = {
   // Add

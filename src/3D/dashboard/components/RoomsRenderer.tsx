@@ -14,6 +14,7 @@ export const RoomRenderer = () => {
   const rooms = useAtomValue(roomsAtom);
   const cameraType = useAtomValue(cameraTypeAtom);
   const activeWall = useAtomValue(activeWallAtom);
+  
   const { handlePointerDown, handlePointerOver, handlePointerOut } = useToolInput();
 
   const [wallColor, setWallColor] = useState<{ roomIndex: number; wallIndex: number; color: string } | null>(null);
@@ -30,7 +31,7 @@ export const RoomRenderer = () => {
     <>
       {rooms.map((room, roomIndex) =>
         room.map(([start, end], wallIndex) => {
-          if (!end) return null;
+          // if (!end) return null;
 
           const isActive = wallColor?.roomIndex === roomIndex && wallColor?.wallIndex === wallIndex;
 
@@ -49,11 +50,12 @@ export const RoomRenderer = () => {
                 thickness={WALL_THICKNESS}
                 height={WALL_HEIGHT}
                 color={isActive ? wallColor.color : '#e2e2e2'}
+                rooms={rooms}
               />
               {cameraType === CameraTypes.ORTHOGRAPHIC && (
                 <>
-                  <WallEndPoints wallIndex={wallIndex} start={start} end={end} roomIndex={roomIndex} />
-                  <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />
+                  <WallEndPoints wallIndex={wallIndex} start={start} end={end} roomIndex={roomIndex} rooms={rooms}/>
+                  <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} rooms={rooms}/>
                 </>
               )}
             </group>

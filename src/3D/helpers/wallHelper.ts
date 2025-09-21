@@ -108,41 +108,106 @@ export function getMiterOffset(thisWallDir: THREE.Vector3, neighborDir: THREE.Ve
 }
 
 export const getConnectedWalls = (rooms: Room[], wallData: ActiveWallData) => {
-  const room = rooms[wallData.roomIndex];
-  const activeWall = room[wallData.wallIndex];
+  const { roomIndex, wallIndex } = wallData;
+
+  const room = rooms[roomIndex];
+  const activeWall = room[wallIndex];
   const [start, end] = activeWall;
 
   const connectedWalls: WallIdentifier[] = [];
 
-  room.forEach((wall, i) => {
+  room.forEach((wall, wallIdx) => {
+    if (wallIdx === wallIndex) return;
+
     let wallIdentifier: WallIdentifier | null = null;
 
+    // Basic connections
     if (wall[0].equals(end)) {
-      wallIdentifier = { index: i, pos: 0 };
-    } else if (wall[1].equals(start)) wallIdentifier = { index: i, pos: 1 };
+      wallIdentifier = { roomIndex, wallIndex: wallIdx, pointIndex: 0, pos: null };
+    } else if (wall[1].equals(start)) wallIdentifier = { roomIndex, wallIndex: wallIdx, pointIndex: 1, pos: null };
+
+    // Perpendicular
+    // (start[z] === wall[0] || start[z] === wall[1]) && (start[x] <= wall[x] <= end[x] || end[x] <= wall[x] <= start[x])
+    // const wallDir = new THREE.Vector3().subVectors(end, start).setY(0);
+    // const isHorizontal = Math.abs(wallDir.x) > Math.abs(wallDir.z);
+
+    // const isStartingOnWall = start.distanceTo(wall[0]) + wall[0].distanceTo(end) === start.distanceTo(end);
+    // const isEndingOnWall = start.distanceTo(wall[1]) + wall[1].distanceTo(end) === start.distanceTo(end);
+
+    // const haveSameZ = start.z === wall[0].z || start.z === wall[1].z;
+    // // const isBetweenActive =
+    // //   (start.x <= wall[0].x && wall[0].x <= end.x) || (end.x <= wall[0].x && wall[0].x <= start.x);
+
+    // if (haveSameZ && (isStartingOnWall || isEndingOnWall)) {
+    //   wallIdentifier = { index: i, pos: isStartingOnWall ? 0 : 1 };
+    // }
 
     if (wallIdentifier) connectedWalls.push(wallIdentifier);
+  });
+
+  if (rooms.length == 1) return connectedWalls;
+
+  rooms.forEach((room, roomIdx) => {
+    if (roomIdx === roomIndex) return;
+
+    room.forEach((wall, wallIdx) => {
+      let wallIdentifier: WallIdentifier | null = null;
+
+      const haveSameZ = start.z === wall[0].z || start.z === wall[1].z;
+      const haveSameX = start.x === wall[0].x || start.x === wall[1].x;
+
+      if (!haveSameZ && !haveSameX) return;
+
+      const isStartingOnWall = start.distanceTo(wall[0]) + wall[0].distanceTo(end) === start.distanceTo(end);
+      const isEndingOnWall = start.distanceTo(wall[1]) + wall[1].distanceTo(end) === start.distanceTo(end);
+
+      if ((haveSameZ || haveSameX) && (isStartingOnWall || isEndingOnWall)) {
+        wallIdentifier = { roomIndex: roomIdx, wallIndex: wallIdx, pointIndex: isStartingOnWall ? 0 : 1, pos: null };
+      }
+
+      if (wallIdentifier) connectedWalls.push(wallIdentifier);
+    });
+    return;
   });
 
   return connectedWalls;
 };
 
 export const updateConnectedWalls = (
+  activeRoomIndex: number,
   newStart: THREE.Vector3,
   newEnd: THREE.Vector3,
-  room: Room,
+  rooms: Room[],
   connectedWalls: WallIdentifier[]
-): Room => {
-  const focusedRoom = [...room];
+): Room[] => {
+  const allRooms = [...rooms];
 
-  connectedWalls.forEach((wallData) => {
-    const { index, pos } = wallData;
-    const wall = room[index];
+  connectedWalls.forEach((entry, i) => {
+    const { roomIndex, wallIndex, pointIndex } = entry;
+    const focusedRoom = allRooms[roomIndex];
+    const wall = focusedRoom[wallIndex];
 
-    wall[pos] = pos === 0 ? newEnd.clone() : newStart.clone();
+    // Update current room
+    if (activeRoomIndex === roomIndex) {
+      wall[pointIndex] = pointIndex === 0 ? newEnd.clone() : newStart.clone();
+    } else {
+      const wallDir = new THREE.Vector3().subVectors(newEnd, newStart).setY(0);
+      const isHorizontal = Math.abs(wallDir.z) === 0;
+      const isVertical = Math.abs(wallDir.x) === 0;
 
-    focusedRoom[index] = wall;
+      if (isHorizontal) {
+        wall[pointIndex].z = newEnd.z;
+      } else if (isVertical) {
+        wall[pointIndex].x = newEnd.x;
+      }
+    }
+
+    // console.log('Focused Room [Pre]: ', focusedRoom);
+    focusedRoom[wallIndex] = wall;
+    // console.log('Focused Room [Post]: ', focusedRoom);
+
+    allRooms[roomIndex] = focusedRoom;
   });
 
-  return focusedRoom;
+  return allRooms;
 };

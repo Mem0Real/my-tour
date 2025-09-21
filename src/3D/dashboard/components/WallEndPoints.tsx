@@ -3,6 +3,7 @@
 import { activeEndpointAtom } from '@/utils/atoms/drawing';
 import { activeToolAtom, cursorTypeAtom } from '@/utils/atoms/ui';
 import { CursorTypes } from '@/utils/constants';
+import { Room } from '@/utils/definitions';
 import { ThreeEvent } from '@react-three/fiber';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React from 'react';
@@ -13,9 +14,10 @@ interface WallEndPointsProps {
   roomIndex: number;
   start: THREE.Vector3;
   end: THREE.Vector3;
+  rooms?: Room[]
 }
 
-export const WallEndPoints = ({ wallIndex, roomIndex, start, end }: WallEndPointsProps) => {
+export const WallEndPoints = ({ wallIndex, roomIndex, start, end, rooms }: WallEndPointsProps) => {
   const [activeEndpoint, setActiveEndpoint] = useAtom(activeEndpointAtom);
   const activeTool = useAtomValue(activeToolAtom);
   const setCursor = useSetAtom(cursorTypeAtom);
