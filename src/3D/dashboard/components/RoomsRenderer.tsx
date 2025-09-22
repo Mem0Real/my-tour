@@ -30,8 +30,25 @@ export const RoomRenderer = () => {
   return (
     <>
       {rooms.map((room, roomIndex) =>
-        room.map(([start, end], wallIndex) => {
-          // if (!end) return null;
+        room.map((segment, wallIndex) => {
+          const [start, end] = segment;
+          if (!end) return null;
+
+          const numWalls = room.length;
+
+          // Previous wall segment for prevDir
+            const prevIndex = (wallIndex - 1 + numWalls) % numWalls;
+            const prevSegment = room[prevIndex];
+            const prevDir = new THREE.Vector3()
+              .subVectors(start, prevSegment[0])
+              .normalize();
+
+            // Next wall segment for nextDir
+            const nextIndex = (wallIndex + 1) % numWalls;
+            const nextSegment = room[nextIndex];
+            const nextDir = new THREE.Vector3()
+              .subVectors(nextSegment[1], end)
+              .normalize();
 
           const isActive = wallColor?.roomIndex === roomIndex && wallColor?.wallIndex === wallIndex;
 
@@ -50,6 +67,8 @@ export const RoomRenderer = () => {
                 thickness={WALL_THICKNESS}
                 height={WALL_HEIGHT}
                 color={isActive ? wallColor.color : '#e2e2e2'}
+                prevDir={prevDir}
+                nextDir={nextDir}
                 rooms={rooms}
               />
               {cameraType === CameraTypes.ORTHOGRAPHIC && (

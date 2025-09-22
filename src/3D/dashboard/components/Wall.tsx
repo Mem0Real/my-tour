@@ -4,7 +4,7 @@ import { getMiterOffset } from '@/3D/helpers/wallHelper';
 import { WallProps } from '@/utils/definitions';
 
 export const Wall: FC<WallProps> = React.memo(
-  ({ start, end, thickness = 0.1, height = 2.5, color = 'white', prevDir = null, nextDir = null, rooms }) => {
+  ({ start, end, thickness = 0.1, height = 1.5, color = 'white', prevDir = null, nextDir = null, rooms }) => {
     const wallDir = new THREE.Vector3().subVectors(end, start).setY(0).normalize();
 
     let startOffset = 0;

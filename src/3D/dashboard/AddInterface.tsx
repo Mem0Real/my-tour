@@ -95,8 +95,9 @@ export const AddInterface = ({ children }: Children) => {
     const nearFirstPoint = newPos.distanceTo(firstPoint.pos) < SNAP_DISTANCE && currentLoop.length > 2;
 
     if (nearFirstPoint) {
-      const newWalls = currentLoop
-        .map((p, i, arr) => [p.pos, arr[(i + 1) % arr.length].pos] as [THREE.Vector3, THREE.Vector3]);
+      const newWalls = currentLoop.map(
+        (p, i, arr) => [p.pos, arr[(i + 1) % arr.length].pos] as [THREE.Vector3, THREE.Vector3]
+      );
 
       // Add new room by pushing newWalls array
       setRooms([...rooms, newWalls]);
@@ -134,7 +135,12 @@ export const AddInterface = ({ children }: Children) => {
 
       const allWalls = rooms.flat();
 
-      const { snappedPoint } = snapToPoints(cursor, currentLoop.map((p) => p.pos), allWalls, SNAP_TOLERANCE);
+      const { snappedPoint } = snapToPoints(
+        cursor,
+        currentLoop.map((p) => p.pos),
+        allWalls,
+        SNAP_TOLERANCE
+      );
 
       const lastPoint = currentLoop[currentLoop.length - 1];
       const straightened = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
@@ -157,10 +163,27 @@ export const AddInterface = ({ children }: Children) => {
     <ToolInputProvider value={handlers}>
       {children}
       {currentLoop.map((pointData, i) => {
+        if (i === currentLoop.length - 1 && !previewPoint) return null;
+
         const start = pointData.pos;
         const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1].pos;
-
         if (!end) return null;
+
+        // Compute prevDir if not the first segment
+        let prevDir: THREE.Vector3 | null = null;
+        if (i > 0) {
+          const prevStart = currentLoop[i - 1].pos;
+          prevDir = new THREE.Vector3().subVectors(start, prevStart).normalize();
+        }
+
+        // Compute nextDir if not the last segment
+        let nextDir: THREE.Vector3 | null = null;
+        if (i < currentLoop.length - 1) {
+          const nextEnd = i + 1 === currentLoop.length - 1 ? previewPoint : currentLoop[i + 2]?.pos;
+          if (nextEnd) {
+            nextDir = new THREE.Vector3().subVectors(nextEnd, end).normalize();
+          }
+        }
 
         return (
           <React.Fragment key={`current-${i}`}>
@@ -170,7 +193,9 @@ export const AddInterface = ({ children }: Children) => {
               end={end}
               thickness={WALL_THICKNESS}
               height={WALL_HEIGHT}
-              color="white"
+              color='white'
+              prevDir={prevDir}
+              nextDir={nextDir}
             />
             {i === currentLoop.length - 1 && previewPoint && (
               <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />

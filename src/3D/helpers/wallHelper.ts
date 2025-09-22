@@ -99,13 +99,19 @@ export function generateCornerFillers(loop: THREE.Vector3[], thickness: number, 
  * @param neighborDir - normalized direction of adjacent wall
  * @param thickness - wall thickness
  */
-export function getMiterOffset(thisWallDir: THREE.Vector3, neighborDir: THREE.Vector3, thickness: number) {
-  let dot = thisWallDir.dot(neighborDir);
-  dot = THREE.MathUtils.clamp(dot, -1, 1);
-  const angle = Math.acos(dot);
-  if (Math.abs(angle) < 1e-4) return thickness / 2;
-  return thickness / 2 / Math.sin(angle / 2);
-}
+// export function getMiterOffset(thisWallDir: THREE.Vector3, neighborDir: THREE.Vector3, thickness: number) {
+//   let dot = thisWallDir.dot(neighborDir);
+//   dot = THREE.MathUtils.clamp(dot, -1, 1);
+//   const angle = Math.acos(dot);
+//   if (Math.abs(angle) < 1e-4) return thickness / 2;
+//   return thickness / 2 / Math.sin(angle / 2);
+// }
+
+export const getMiterOffset = (dir: THREE.Vector3, prevDir: THREE.Vector3, thickness: number): number => {
+  const angle = dir.angleTo(prevDir);
+  if (angle < 1e-3) return 0;
+  return thickness / Math.tan(angle / 2);
+};
 
 export const getConnectedWalls = (rooms: Room[], wallData: ActiveWallData) => {
   const { roomIndex, wallIndex } = wallData;
@@ -116,37 +122,23 @@ export const getConnectedWalls = (rooms: Room[], wallData: ActiveWallData) => {
 
   const connectedWalls: WallIdentifier[] = [];
 
+  // Basic connections (for one room)
   room.forEach((wall, wallIdx) => {
     if (wallIdx === wallIndex) return;
 
     let wallIdentifier: WallIdentifier | null = null;
 
-    // Basic connections
+    // If the wall's start is connected to the active wall's end
     if (wall[0].equals(end)) {
       wallIdentifier = { roomIndex, wallIndex: wallIdx, pointIndex: 0, pos: null };
     } else if (wall[1].equals(start)) wallIdentifier = { roomIndex, wallIndex: wallIdx, pointIndex: 1, pos: null };
-
-    // Perpendicular
-    // (start[z] === wall[0] || start[z] === wall[1]) && (start[x] <= wall[x] <= end[x] || end[x] <= wall[x] <= start[x])
-    // const wallDir = new THREE.Vector3().subVectors(end, start).setY(0);
-    // const isHorizontal = Math.abs(wallDir.x) > Math.abs(wallDir.z);
-
-    // const isStartingOnWall = start.distanceTo(wall[0]) + wall[0].distanceTo(end) === start.distanceTo(end);
-    // const isEndingOnWall = start.distanceTo(wall[1]) + wall[1].distanceTo(end) === start.distanceTo(end);
-
-    // const haveSameZ = start.z === wall[0].z || start.z === wall[1].z;
-    // // const isBetweenActive =
-    // //   (start.x <= wall[0].x && wall[0].x <= end.x) || (end.x <= wall[0].x && wall[0].x <= start.x);
-
-    // if (haveSameZ && (isStartingOnWall || isEndingOnWall)) {
-    //   wallIdentifier = { index: i, pos: isStartingOnWall ? 0 : 1 };
-    // }
 
     if (wallIdentifier) connectedWalls.push(wallIdentifier);
   });
 
   if (rooms.length == 1) return connectedWalls;
 
+  // Advanced connections (for multiple rooms/loops)
   rooms.forEach((room, roomIdx) => {
     if (roomIdx === roomIndex) return;
 
@@ -182,6 +174,7 @@ export const updateConnectedWalls = (
 ): Room[] => {
   const allRooms = [...rooms];
 
+  // Loop through each stored walls and update corresponding entry in the respective room
   connectedWalls.forEach((entry, i) => {
     const { roomIndex, wallIndex, pointIndex } = entry;
     const focusedRoom = allRooms[roomIndex];
@@ -192,6 +185,7 @@ export const updateConnectedWalls = (
       wall[pointIndex] = pointIndex === 0 ? newEnd.clone() : newStart.clone();
     } else {
       const wallDir = new THREE.Vector3().subVectors(newEnd, newStart).setY(0);
+      
       const isHorizontal = Math.abs(wallDir.z) === 0;
       const isVertical = Math.abs(wallDir.x) === 0;
 
@@ -202,9 +196,7 @@ export const updateConnectedWalls = (
       }
     }
 
-    // console.log('Focused Room [Pre]: ', focusedRoom);
     focusedRoom[wallIndex] = wall;
-    // console.log('Focused Room [Post]: ', focusedRoom);
 
     allRooms[roomIndex] = focusedRoom;
   });

@@ -36,7 +36,7 @@ export const Cameras = () => {
 
   switch (cameraType) {
     case PERSPECTIVE:
-      return <PerspectiveCamera makeDefault fov={60} near={0.1} far={50} />;
+      return <PerspectiveCamera makeDefault fov={60} near={0.1} far={150} />;
     case ORTHOGRAPHIC:
       return (
         <OrthographicCamera
@@ -46,7 +46,7 @@ export const Cameras = () => {
           top={top}
           bottom={bottom}
           near={0.1}
-          far={100}
+          far={150}
           rotation={[-Math.PI / 2, 0, 0]}
           manual
         />
