@@ -5,7 +5,7 @@ import { snapCuesAtom } from '@/utils/atoms/drawing';
 
 import { SnapCues } from '@/3D/dashboard/components/SnapCues';
 import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
-import { RoomRenderer } from '@/3D/dashboard/components/RoomsRenderer';
+import { Rooms } from '@/3D/dashboard/components/Rooms';
 import { activeToolAtom } from '@/utils/atoms/ui';
 
 export const Platform = () => {
@@ -43,7 +43,7 @@ export const Platform = () => {
       </mesh>
 
       {/* Rendered walls */}
-      <RoomRenderer />
+      <Rooms />
 
       {/* Snap cues */}
       <SnapCues points={snapCues} />

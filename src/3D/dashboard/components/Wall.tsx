@@ -1,10 +1,13 @@
 import * as THREE from 'three';
-import React, { FC, useMemo } from 'react';
+import React, { FC, useMemo, useContext } from 'react';
 import { getMiterOffset } from '@/3D/helpers/wallHelper';
 import { WallProps } from '@/utils/definitions';
+import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
 
 export const Wall: FC<WallProps> = React.memo(
-  ({ start, end, thickness = 0.1, height = 1.5, color = 'white', prevDir = null, nextDir = null, rooms }) => {
+  ({ start, end, thickness = 0.1, height = 1.5, color = 'white', prevDir = null, nextDir = null, roomIndex, id }) => {
+    const handlers = useToolInput()
+
     const wallDir = new THREE.Vector3().subVectors(end, start).setY(0).normalize();
 
     let startOffset = 0;
@@ -29,7 +32,27 @@ export const Wall: FC<WallProps> = React.memo(
     const angle = Math.atan2(dir.z, dir.x);
 
     return (
-      <mesh position={[mid.x, height / 2, mid.z]} rotation={[0, -angle, 0]}>
+      <mesh
+        position={[mid.x, height / 2, mid.z]}
+        rotation={[0, -angle, 0]}
+        onPointerDown={(e) => {
+          // e.stopPropagation();
+          if (handlers.handlePointerDown && roomIndex !== undefined && id !== undefined) {
+            handlers.handlePointerDown(e, { roomIndex, wallIndex: id });
+          }
+        }}
+        onPointerOver={(e) => {
+          if (handlers.handlePointerOver && roomIndex !== undefined && id !== undefined) {
+            handlers.handlePointerOver(e, { roomIndex, wallIndex: id });
+          }
+        }}
+        onPointerOut={handlers.handlePointerOut}
+        onContextMenu={(e) => {
+          if (handlers.handleRightClick) {
+            handlers.handleRightClick(e);
+          }
+        }}
+      >
         <boxGeometry args={[length, height, thickness * 2]} />
         <meshStandardMaterial color={color} opacity={1} transparent />
       </mesh>

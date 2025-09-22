@@ -5,9 +5,10 @@ import * as THREE from 'three';
 
 import { cameraTypeAtom, cursorTypeAtom, insertAtom } from '@/utils/atoms/ui';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { isDrawingAtom, previewPointAtom, snapCuesAtom, roomsAtom } from '@/utils/atoms/drawing';
+import { isDrawingAtom, previewPointAtom, snapCuesAtom } from '@/utils/atoms/drawing';
+import { pointsAtom, roomsAtom } from '@/utils/atoms/drawing';
 
-import { Children, LoopPoint } from '@/utils/definitions';
+import { Children } from '@/utils/definitions';
 import { snapToPoints, straighten } from '@/3D/helpers/wallHelper';
 import {
   CameraTypes,
@@ -25,6 +26,7 @@ import { LengthOverlay } from '@/3D/dashboard/components/LengthOverlay';
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
 
 export const AddInterface = ({ children }: Children) => {
+  const [points, setPoints] = useAtom(pointsAtom);
   const [rooms, setRooms] = useAtom(roomsAtom);
   const setInsert = useSetAtom(insertAtom);
   const setCursor = useSetAtom(cursorTypeAtom);
@@ -35,8 +37,7 @@ export const AddInterface = ({ children }: Children) => {
   const cameraType = useAtomValue(cameraTypeAtom);
   const setSnapCues = useSetAtom(snapCuesAtom);
 
-  const [currentLoop, setCurrentLoop] = useState<LoopPoint[]>([]);
-  const [dragging, setDragging] = useState(false);
+  const [currentLoop, setCurrentLoop] = useState<number[]>([]); // Indices into points
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && isDrawing && currentLoop.length > 0) {
@@ -56,14 +57,6 @@ export const AddInterface = ({ children }: Children) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentLoop, isDrawing]);
 
-  const handleRightClick = (e: any) => {
-    if (e?.button === 2 && !e.repeat) setDragging(true);
-  };
-
-  const handlePointerUp = (e: any) => {
-    if (e?.button === 2) setDragging(false);
-  };
-
   const handlePointerDown = (e: any) => {
     if (!e || !e.point || e.button === 2) return;
     if (cameraType !== CameraTypes.ORTHOGRAPHIC) return;
@@ -71,57 +64,83 @@ export const AddInterface = ({ children }: Children) => {
     const clicked = e.point.clone();
     clicked.y = 0;
 
-    // Flatten all walls from all rooms for snapping purposes
-    const allWalls = rooms.flat();
+    const currentPositions = currentLoop.map((idx) => points[idx]);
 
-    const currentLoopPositions = currentLoop.map((p) => p.pos);
-    const { snappedPoint, snappedWall } = snapToPoints(clicked, currentLoopPositions, allWalls, SNAP_TOLERANCE);
+    const snapResult = snapToPoints(clicked, currentPositions, points, rooms, SNAP_TOLERANCE);
 
-    const pointData: LoopPoint = { pos: snappedPoint.clone(), snappedWall };
+    let snappedPoint = snapResult.snappedPoint;
 
     if (!isDrawing) {
-      setCurrentLoop([pointData]);
+      let newIdx = snapResult.snappedPointIdx ?? points.length;
+      if (snapResult.snappedPointIdx === undefined) {
+        setPoints((prev) => [...prev, snappedPoint.clone()]);
+      }
+
+      if (
+        snapResult.snappedRoomIdx !== undefined &&
+        snapResult.snappedWallIdx !== undefined &&
+        snapResult.snappedPointIdx === undefined
+      ) {
+        const newRooms = [...rooms];
+        const targetRoom = [...newRooms[snapResult.snappedRoomIdx]];
+        targetRoom.splice(snapResult.snappedWallIdx + 1, 0, newIdx);
+        newRooms[snapResult.snappedRoomIdx] = targetRoom;
+        setRooms(newRooms);
+      }
+
+      setCurrentLoop([newIdx]);
       setIsDrawing(true);
       setPreviewPoint(null);
       return;
     }
 
-    const firstPoint = currentLoop[0];
-    const lastPoint = currentLoop[currentLoop.length - 1];
+    // For subsequent points
+    const firstIdx = currentLoop[0];
+    const lastIdx = currentLoop[currentLoop.length - 1];
+    const lastPoint = points[lastIdx];
+    const newPos = straighten(lastPoint, snappedPoint, STRAIGHT_THRESHOLD);
+    const firstPoint = points[firstIdx];
 
-    const newPos = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
-    const newPointData: LoopPoint = { pos: newPos, snappedWall: snappedWall || undefined };
+    const isNearFirst = currentLoop.length > 2 && newPos.distanceTo(firstPoint) < SNAP_DISTANCE;
 
-    const nearFirstPoint = newPos.distanceTo(firstPoint.pos) < SNAP_DISTANCE && currentLoop.length > 2;
-
-    if (nearFirstPoint) {
-      const newWalls = currentLoop.map(
-        (p, i, arr) => [p.pos, arr[(i + 1) % arr.length].pos] as [THREE.Vector3, THREE.Vector3]
-      );
-
-      // Add new room by pushing newWalls array
-      setRooms([...rooms, newWalls]);
-
-      setCurrentLoop([]);
-      setPreviewPoint(null);
-      setIsDrawing(false);
-      return;
+    let newIdx: number;
+    if (isNearFirst) {
+      newIdx = firstIdx;
+    } else if (snapResult.snappedPointIdx !== undefined) {
+      newIdx = snapResult.snappedPointIdx;
+    } else {
+      newIdx = points.length;
+      setPoints((prev) => [...prev, newPos.clone()]);
     }
 
-    if (snappedWall) {
-      const newWalls = currentLoop
-        .concat([newPointData])
-        .map((p, i, arr) => [p.pos, arr[i + 1]?.pos].filter(Boolean) as THREE.Vector3[])
-        .filter((seg) => seg.length === 2) as [THREE.Vector3, THREE.Vector3][];
-
-      setRooms([...rooms, newWalls]);
-      setCurrentLoop([]);
-      setPreviewPoint(null);
-      setIsDrawing(false);
-      return;
+    if (
+      snapResult.snappedRoomIdx !== undefined &&
+      snapResult.snappedWallIdx !== undefined &&
+      snapResult.snappedPointIdx === undefined &&
+      !isNearFirst
+    ) {
+      // Split only if not closing
+      const newRooms = [...rooms];
+      const targetRoom = [...newRooms[snapResult.snappedRoomIdx]];
+      targetRoom.splice(snapResult.snappedWallIdx + 1, 0, newIdx);
+      newRooms[snapResult.snappedRoomIdx] = targetRoom;
+      setRooms(newRooms);
     }
 
-    setCurrentLoop([...currentLoop, newPointData]);
+    if (isNearFirst) {
+      const roomToAdd = [...currentLoop, firstIdx];
+      setRooms((prev) => [...prev, roomToAdd]);
+      setCurrentLoop([]);
+      setIsDrawing(false);
+    } else if (snapResult.snappedWall && snapResult.snappedPointIdx === undefined) {
+      const roomToAdd = [...currentLoop, newIdx];
+      setRooms((prev) => [...prev, roomToAdd]);
+      setCurrentLoop([]);
+      setIsDrawing(false);
+    } else {
+      setCurrentLoop([...currentLoop, newIdx]);
+    }
+
     setPreviewPoint(null);
   };
 
@@ -133,70 +152,52 @@ export const AddInterface = ({ children }: Children) => {
       const cursor = e.point.clone();
       cursor.y = 0;
 
-      const allWalls = rooms.flat();
+      const currentPositions = currentLoop.map((idx) => points[idx]);
 
-      const { snappedPoint } = snapToPoints(
-        cursor,
-        currentLoop.map((p) => p.pos),
-        allWalls,
-        SNAP_TOLERANCE
-      );
+      let snapResult = snapToPoints(cursor, currentPositions, points, rooms, SNAP_TOLERANCE);
+      let snappedPoint = snapResult.snappedPoint;
 
-      const lastPoint = currentLoop[currentLoop.length - 1];
-      const straightened = straighten(lastPoint.pos, snappedPoint, STRAIGHT_THRESHOLD);
+      // Force preview to first point if close for closing visual cue
+      if (currentLoop.length > 2) {
+        const firstIdx = currentLoop[0];
+        const firstPoint = points[firstIdx];
+        if (snappedPoint.distanceTo(firstPoint) < SNAP_DISTANCE) {
+          snappedPoint.copy(firstPoint);
+          snapResult.snappedPointIdx = firstIdx;
+          snapResult.snappedWall = undefined;
+        }
+      }
+
+      const lastIdx = currentLoop[currentLoop.length - 1];
+      const lastPoint = points[lastIdx];
+      const straightened = straighten(lastPoint, snappedPoint, STRAIGHT_THRESHOLD);
 
       setPreviewPoint(straightened);
       setSnapCues([snappedPoint]);
     },
-    [isDrawing, dragging, currentLoop, rooms, setPreviewPoint, setSnapCues, cameraType]
+    [isDrawing, currentLoop, points, rooms, setPreviewPoint, setSnapCues, cameraType]
   );
 
   const handlers = {
     onPointerDown: handlePointerDown,
-    onPointerUp: handlePointerUp,
     onPointerMove: handlePointerMove,
-    onRightClick: handleRightClick,
     onKeyDown: handleKeyDown,
   };
 
   return (
     <ToolInputProvider value={handlers}>
       {children}
-      {currentLoop.map((pointData, i) => {
-        if (i === currentLoop.length - 1 && !previewPoint) return null;
+      {currentLoop.map((idx, i) => {
+        if (i >= currentLoop.length - 1 && !previewPoint) return null;
 
-        const start = pointData.pos;
-        const end = i === currentLoop.length - 1 ? previewPoint : currentLoop[i + 1].pos;
+        const start = points[idx];
+        const end = currentLoop[i + 1] !== undefined ? points[currentLoop[i + 1]] : previewPoint;
+
         if (!end) return null;
-
-        // Compute prevDir if not the first segment
-        let prevDir: THREE.Vector3 | null = null;
-        if (i > 0) {
-          const prevStart = currentLoop[i - 1].pos;
-          prevDir = new THREE.Vector3().subVectors(start, prevStart).normalize();
-        }
-
-        // Compute nextDir if not the last segment
-        let nextDir: THREE.Vector3 | null = null;
-        if (i < currentLoop.length - 1) {
-          const nextEnd = i + 1 === currentLoop.length - 1 ? previewPoint : currentLoop[i + 2]?.pos;
-          if (nextEnd) {
-            nextDir = new THREE.Vector3().subVectors(nextEnd, end).normalize();
-          }
-        }
 
         return (
           <React.Fragment key={`current-${i}`}>
-            <Wall
-              id={i}
-              start={start}
-              end={end}
-              thickness={WALL_THICKNESS}
-              height={WALL_HEIGHT}
-              color='white'
-              prevDir={prevDir}
-              nextDir={nextDir}
-            />
+            <Wall id={i} start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} color='white' />
             {i === currentLoop.length - 1 && previewPoint && (
               <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
             )}

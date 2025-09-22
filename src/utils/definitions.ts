@@ -4,18 +4,23 @@ export interface Children {
   children: React.ReactNode;
 }
 
+export type Point = THREE.Vector3;
+
 export type Wall = [THREE.Vector3, THREE.Vector3];
 
-export type Room = Wall[];
+export type Room = number[]; // Array of point indices into pointsAtom
 
 export interface LoopPoint {
-  pos: THREE.Vector3;
-  snappedWall?: [THREE.Vector3, THREE.Vector3] | null;
+  idx: number; // Index into points
+  snappedWall?: Wall | null;
 }
 
 export interface SnapResult {
   snappedPoint: THREE.Vector3;
-  snappedWall?: [THREE.Vector3, THREE.Vector3] | null;
+  snappedWall?: Wall;
+  snappedPointIdx?: number;
+  snappedRoomIdx?: number;
+  snappedWallIdx?: number;
 }
 
 export interface WallProps {
@@ -26,9 +31,9 @@ export interface WallProps {
   color?: string;
   prevDir?: THREE.Vector3 | null;
   nextDir?: THREE.Vector3 | null;
-  roomIndex?: number; // added roomIndex for context if needed
-  id?: number; // wall index if needed
-  rooms?: Room[]; // optional rooms array
+  roomIndex?: number;
+  id?: number;
+  rooms?: Room[];
 
   onPointerDown?: (e: any) => void;
 }
@@ -51,16 +56,14 @@ export interface JointProps {
 export interface EndpointRef {
   roomIndex: number;
   wallIndex: number;
-  pointIndex: 0 | 1;
+  isStart: boolean;
   pos: THREE.Vector3 | null;
 }
 
-export interface ActiveWallData extends WallData {
+export interface ActiveWallData {
   roomIndex: number;
-  wallIndex: number;
+  wallIndex: number; // Segment index in the room's point list
 }
-
-export interface WallIdentifier extends EndpointRef {}
 
 export type ToolHandlers = {
   // Add
