@@ -1,5 +1,5 @@
 import { ToolHandlers } from '@/utils/definitions';
-import React, { createContext, useContext } from 'react';
+import { createContext, useContext } from 'react';
 
 const ToolInputContext = createContext<ToolHandlers>({});
 export const useToolInput = () => useContext(ToolInputContext);

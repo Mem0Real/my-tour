@@ -1,4 +1,3 @@
-// CanvasBase.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -9,8 +8,9 @@ import { useTheme } from 'next-themes';
 
 import { r3f } from '@/utils/globals';
 import { cursorTypeAtom } from '@/utils/atoms/ui';
+import { Children } from '@/utils/definitions';
 
-export const CanvasBase = ({ props }: any) => {
+export const CanvasBase = () => {
   const cursorType = useAtomValue(cursorTypeAtom);
   const { theme } = useTheme();
 
@@ -26,7 +26,6 @@ export const CanvasBase = ({ props }: any) => {
       shadows
       className={`w-full h-full cursor-${cursorType || 'auto'} antialiased`}
       style={{ position: 'absolute', top: 0, left: 0 }}
-      {...props}
     >
       <color attach='background' args={[theme === 'dark' ? '#212122' : '#ededed']} />
       <r3f.Out />

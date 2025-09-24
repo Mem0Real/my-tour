@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { activeToolAtom, cameraTypeAtom, keyPressedAtom, toolsCollapsedAtom } from '@/utils/atoms/ui';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { CameraTypes } from '@/utils/constants';
@@ -34,12 +34,12 @@ export const KeyboardListener = () => {
       case 'q':
         setIsCollapsed((prev) => !prev);
         break;
-        
+
       case 'd':
         setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
         break;
     }
-  }, [keyPressed]);
+  }, [keyPressed, setActiveTool, setCameraType, setIsCollapsed, setTheme]);
 
   return null;
 };

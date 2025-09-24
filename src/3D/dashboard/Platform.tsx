@@ -7,15 +7,16 @@ import { SnapCues } from '@/3D/dashboard/components/SnapCues';
 import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
 import { Rooms } from '@/3D/dashboard/components/Rooms';
 import { activeToolAtom } from '@/utils/atoms/ui';
+import { ThreeEvent } from '@react-three/fiber';
 
 export const Platform = () => {
   const snapCues = useAtomValue(snapCuesAtom);
   const activeTool = useAtomValue(activeToolAtom);
 
-  const { onPointerDown, onPointerMove, onPointerUp, onRightClick, onKeyDown, handlePointerUp, handlePointerMove } =
+  const { onPointerDown, onPointerMove, onPointerUp, onRightClick, handlePointerUp, handlePointerMove } =
     useToolInput();
 
-  const handlePlatformMove = (e: any) => {
+  const handlePlatformMove = (e: ThreeEvent<MouseEvent>) => {
     switch (activeTool) {
       case 'add':
         onPointerMove?.(e);

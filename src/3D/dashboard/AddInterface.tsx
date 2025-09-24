@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import * as THREE from 'three';
 
 import { cameraTypeAtom, cursorTypeAtom, insertAtom } from '@/utils/atoms/ui';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -20,10 +19,11 @@ import {
   WALL_THICKNESS,
 } from '@/utils/constants';
 
-import { Wall } from '@/3D/dashboard/components/Wall';
-import { LengthOverlay } from '@/3D/dashboard/components/LengthOverlay';
+import Wall from '@/3D/dashboard/components/Wall';
+import LengthOverlay from '@/3D/dashboard/components/LengthOverlay';
 
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
+import { ThreeEvent } from '@react-three/fiber';
 
 export const AddInterface = ({ children }: Children) => {
   const [points, setPoints] = useAtom(pointsAtom);
@@ -55,9 +55,9 @@ export const AddInterface = ({ children }: Children) => {
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentLoop, isDrawing]);
+  }, [currentLoop, isDrawing, handleKeyDown]);
 
-  const handlePointerDown = (e: any) => {
+  const handlePointerDown = (e: ThreeEvent<MouseEvent>) => {
     if (!e || !e.point || e.button === 2) return;
     if (cameraType !== CameraTypes.ORTHOGRAPHIC) return;
 
@@ -68,10 +68,10 @@ export const AddInterface = ({ children }: Children) => {
 
     const snapResult = snapToPoints(clicked, currentPositions, points, rooms, SNAP_TOLERANCE);
 
-    let snappedPoint = snapResult.snappedPoint;
+    const snappedPoint = snapResult.snappedPoint;
 
     if (!isDrawing) {
-      let newIdx = snapResult.snappedPointIdx ?? points.length;
+      const newIdx = snapResult.snappedPointIdx ?? points.length;
       if (snapResult.snappedPointIdx === undefined) {
         setPoints((prev) => [...prev, snappedPoint.clone()]);
       }
@@ -145,7 +145,7 @@ export const AddInterface = ({ children }: Children) => {
   };
 
   const handlePointerMove = useCallback(
-    (e: any) => {
+    (e: ThreeEvent<MouseEvent>) => {
       if (!e?.point || !isDrawing) return;
       if (cameraType !== CameraTypes.ORTHOGRAPHIC && !e.shiftKey) return;
 
@@ -154,8 +154,8 @@ export const AddInterface = ({ children }: Children) => {
 
       const currentPositions = currentLoop.map((idx) => points[idx]);
 
-      let snapResult = snapToPoints(cursor, currentPositions, points, rooms, SNAP_TOLERANCE);
-      let snappedPoint = snapResult.snappedPoint;
+      const snapResult = snapToPoints(cursor, currentPositions, points, rooms, SNAP_TOLERANCE);
+      const snappedPoint = snapResult.snappedPoint;
 
       // Force preview to first point if close for closing visual cue
       if (currentLoop.length > 2) {

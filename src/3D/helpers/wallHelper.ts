@@ -89,45 +89,6 @@ export const snapToPoints = (
   return { snappedPoint, snappedWall, snappedPointIdx, snappedRoomIdx, snappedWallIdx };
 };
 
-export function generateCornerFillers(loop: THREE.Vector3[], thickness: number, height: number): THREE.Mesh[] {
-  const fillers: THREE.Mesh[] = [];
-
-  for (let i = 0; i < loop.length; i++) {
-    const prev = loop[(i - 1 + loop.length) % loop.length];
-    const curr = loop[i];
-    const next = loop[(i + 1) % loop.length];
-
-    const dir1 = new THREE.Vector2()
-      .subVectors(new THREE.Vector2(curr.x, curr.z), new THREE.Vector2(prev.x, prev.z))
-      .normalize();
-
-    const dir2 = new THREE.Vector2()
-      .subVectors(new THREE.Vector2(next.x, next.z), new THREE.Vector2(curr.x, curr.z))
-      .normalize();
-
-    const normal1 = new THREE.Vector2(-dir1.y, dir1.x).multiplyScalar(thickness * 8);
-    const normal2 = new THREE.Vector2(-dir2.y, dir2.x).multiplyScalar(thickness * 8);
-
-    const p1 = new THREE.Vector3(curr.x + normal1.x, 0, curr.z + normal1.y);
-    const p2 = new THREE.Vector3(curr.x + normal2.x, 0, curr.z + normal2.y);
-
-    const shape = new THREE.Shape();
-    shape.moveTo(curr.x, curr.z);
-    shape.lineTo(p1.x, p1.z);
-    shape.lineTo(p2.x, p2.z);
-    shape.lineTo(curr.x, curr.z);
-
-    const geometry = new THREE.ShapeGeometry(shape);
-    const material = new THREE.MeshStandardMaterial({ color: 'black' });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.y = 0.01; // Slight lift to avoid z-fighting
-
-    fillers.push(mesh);
-  }
-
-  return fillers;
-}
-
 export const getMiterOffset = (dir: THREE.Vector3, prevDir: THREE.Vector3, thickness: number): number => {
   const angle = dir.angleTo(prevDir);
   if (angle < 1e-3) return 0;
@@ -194,7 +155,7 @@ export const getColinearChain = (rooms: Room[], points: THREE.Vector3[], active:
     Array.from(chainSet).find((idx) => {
       let degree = 0;
       rooms.forEach((r) =>
-        r.forEach((p, i) => {
+        r.forEach((p) => {
           if (p === idx) degree++;
         })
       );

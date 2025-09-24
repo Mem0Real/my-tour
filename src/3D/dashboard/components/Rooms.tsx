@@ -4,8 +4,10 @@ import * as THREE from 'three';
 
 import { pointsAtom, roomsAtom } from '@/utils/atoms/drawing';
 import { CameraTypes, WALL_HEIGHT, WALL_THICKNESS } from '@/utils/constants';
-import { Wall } from '@/3D/dashboard/components/Wall';
-import { LengthOverlay } from '@/3D/dashboard/components/LengthOverlay';
+
+import Wall from '@/3D/dashboard/components/Wall';
+import LengthOverlay from '@/3D/dashboard/components/LengthOverlay';
+
 import { cameraTypeAtom } from '@/utils/atoms/ui';
 
 export const Rooms = () => {

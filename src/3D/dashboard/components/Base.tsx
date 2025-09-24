@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { Cameras } from '@/3D/base/Cameras';
 import { Controller } from '@/3D/base/Controller';

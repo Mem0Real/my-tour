@@ -4,7 +4,6 @@ import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { cameraTypeAtom } from '@/utils/atoms/ui';
 import { CameraTypes } from '@/utils/constants';
-import useMeasure from 'react-use-measure';
 
 export const Cameras = () => {
   const { size, camera } = useThree();

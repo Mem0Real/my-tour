@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import React, { FC, useMemo, useContext } from 'react';
+import React, { FC, useMemo } from 'react';
 import { getMiterOffset } from '@/3D/helpers/wallHelper';
 import { WallProps } from '@/utils/definitions';
 import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
 
-export const Wall: FC<WallProps> = React.memo(
+const Wall: FC<WallProps> = React.memo(
   ({ start, end, thickness = 0.1, height = 1.5, color = 'white', prevDir = null, nextDir = null, roomIndex, id }) => {
     const handlers = useToolInput()
 
@@ -59,3 +59,7 @@ export const Wall: FC<WallProps> = React.memo(
     );
   }
 );
+
+Wall.displayName = "Wall"
+
+export default Wall;

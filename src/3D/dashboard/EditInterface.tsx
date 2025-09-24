@@ -64,14 +64,14 @@ export function EditInterface({ children }: Children) {
     cursor.y = 0;
 
     if (activeWall) {
-      handleWallMove(cursor, e);
+      handleWallMove(cursor);
     } else if (activeEndpoint) {
       handleEndpointMove(cursor);
     }
   };
 
   // Move whole wall (chain) with axis lock and slide connected walls
-  const handleWallMove = (cursor: THREE.Vector3, e: ThreeEvent<MouseEvent>) => {
+  const handleWallMove = (cursor: THREE.Vector3) => {
     if (!activeWall || !initialCursorPos || chain.length === 0) return;
 
     const delta = new THREE.Vector3(cursor.x - initialCursorPos.x, 0, cursor.z - initialCursorPos.z);
@@ -96,7 +96,7 @@ export function EditInterface({ children }: Children) {
     });
 
     // Update connected walls' start and end points
-    rooms.forEach((room, rIdx) => {
+    rooms.forEach((room) => {
       const rLen = room.length;
       for (let sIdx = 0; sIdx < rLen; sIdx++) {
         const startIdx = room[sIdx];
