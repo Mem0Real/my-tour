@@ -151,11 +151,11 @@ export function EditInterface({ children }: Children) {
   };
 
   // Right click handler
-  const handleRightClick = (e: MouseEvent) => {
+  const handleRightClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
   };
 
-  const handlePointerOver = (e: MouseEvent, wallData?: ActiveWallData) => {
+  const handlePointerOver = (e: ThreeEvent<MouseEvent>, wallData?: ActiveWallData) => {
     if (!wallData) return;
     if (cameraType !== CameraTypes.ORTHOGRAPHIC) return;
 
