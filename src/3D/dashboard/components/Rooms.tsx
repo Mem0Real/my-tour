@@ -74,8 +74,8 @@ export const Rooms = () => {
                   thickness={WALL_THICKNESS}
                   height={WALL_HEIGHT}
                   color='white'
-                  // prevDir={prevDir}
-                  // nextDir={nextDir}
+                  prevDir={prevDir}
+                  nextDir={nextDir}
                   roomIndex={roomIndex}
                   id={wIdx}
                 />
