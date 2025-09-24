@@ -3,12 +3,15 @@ import { useAtomValue } from 'jotai';
 import * as THREE from 'three';
 
 import { pointsAtom, roomsAtom } from '@/utils/atoms/drawing';
-import { WALL_HEIGHT, WALL_THICKNESS } from '@/utils/constants';
+import { CameraTypes, WALL_HEIGHT, WALL_THICKNESS } from '@/utils/constants';
 import { Wall } from '@/3D/dashboard/components/Wall';
+import { LengthOverlay } from '@/3D/dashboard/components/LengthOverlay';
+import { cameraTypeAtom } from '@/utils/atoms/ui';
 
 export const Rooms = () => {
   const points = useAtomValue(pointsAtom);
   const rooms = useAtomValue(roomsAtom);
+  const cameraType = useAtomValue(cameraTypeAtom);
 
   return (
     <>
@@ -67,18 +70,22 @@ export const Rooms = () => {
               }
 
               return (
-                <Wall
-                  key={`wall-${roomIndex}-${wIdx}`}
-                  start={start}
-                  end={end}
-                  thickness={WALL_THICKNESS}
-                  height={WALL_HEIGHT}
-                  color='white'
-                  prevDir={prevDir}
-                  nextDir={nextDir}
-                  roomIndex={roomIndex}
-                  id={wIdx}
-                />
+                <React.Fragment key={`wall-${roomIndex}-${wIdx}`}>
+                  <Wall
+                    start={start}
+                    end={end}
+                    thickness={WALL_THICKNESS}
+                    height={WALL_HEIGHT}
+                    color='white'
+                    prevDir={prevDir}
+                    nextDir={nextDir}
+                    roomIndex={roomIndex}
+                    id={wIdx}
+                  />
+                  {cameraType === CameraTypes.ORTHOGRAPHIC && (
+                    <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />
+                  )}
+                </React.Fragment>
               );
             })}
           </group>
