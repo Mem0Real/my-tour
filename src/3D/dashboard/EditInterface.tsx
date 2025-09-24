@@ -16,7 +16,6 @@ export function EditInterface({ children }: Children) {
   const [initialCursorPos, setInitialCursorPos] = useState<THREE.Vector3 | null>(null);
   const [chain, setChain] = useState<number[]>([]);
   const [initialChainPositions, setInitialChainPositions] = useState<THREE.Vector3[]>([]);
-  const [initialPoints, setInitialPoints] = useState<THREE.Vector3[]>([]); // Snapshot of all points
 
   const [points, setPoints] = useAtom(pointsAtom);
   const [rooms, setRooms] = useAtom(roomsAtom);
@@ -41,7 +40,6 @@ export function EditInterface({ children }: Children) {
     const chainPoints = getColinearChain(rooms, points, wallData);
     setChain(chainPoints);
     setInitialChainPositions(chainPoints.map((idx) => points[idx].clone()));
-    setInitialPoints(points.map((p) => p.clone())); // Store initial state of all points
 
     setCursor(CursorTypes.GRABBING);
   };
@@ -54,7 +52,6 @@ export function EditInterface({ children }: Children) {
     setCursor((prev) => (prev === CursorTypes.GRABBING ? CursorTypes.GRAB : CursorTypes.POINTER));
     setChain([]);
     setInitialChainPositions([]);
-    setInitialPoints([]);
 
     setActiveEndpoint(null);
   };
@@ -75,9 +72,8 @@ export function EditInterface({ children }: Children) {
 
   // Move whole wall (chain) with axis lock and slide connected walls
   const handleWallMove = (cursor: THREE.Vector3, e: ThreeEvent<MouseEvent>) => {
-    if (!activeWall || !initialCursorPos || chain.length === 0 || initialPoints.length === 0) return;
+    if (!activeWall || !initialCursorPos || chain.length === 0) return;
 
-    // Calculate delta relative to initial cursor position
     const delta = new THREE.Vector3(cursor.x - initialCursorPos.x, 0, cursor.z - initialCursorPos.z);
 
     // Determine direction from overall chain
@@ -87,19 +83,19 @@ export function EditInterface({ children }: Children) {
     const isHorizontal = Math.abs(wallDir.x) > Math.abs(wallDir.z);
 
     // Lock movement to appropriate axis
-    const lockedDelta = new THREE.Vector3(isHorizontal ? 0 : delta.x, 0, isHorizontal ? delta.z : 0);
+    const lockedDelta = new THREE.Vector3(!isHorizontal ? delta.x : 0, 0, !isHorizontal ? 0 : delta.z);
 
     // Find connected walls with the same direction
     const connectedPoints = new Set<number>(chain);
     const updatedPoints = [...points];
 
-    // Update chain points based on initial positions plus current delta
+    // Update chain points
     chain.forEach((idx, i) => {
       const init = initialChainPositions[i];
       updatedPoints[idx] = new THREE.Vector3().addVectors(init, lockedDelta);
     });
 
-    // Update connected walls' start and end points with the same direction
+    // Update connected walls' start and end points
     rooms.forEach((room, rIdx) => {
       const rLen = room.length;
       for (let sIdx = 0; sIdx < rLen; sIdx++) {
@@ -110,9 +106,11 @@ export function EditInterface({ children }: Children) {
         const revAngle = wallDir.angleTo(segDir.clone().negate());
 
         if ((angle < 1e-2 || revAngle < 1e-2) && (connectedPoints.has(startIdx) || connectedPoints.has(endIdx))) {
-          // Same direction, update both points using initial positions
-          updatedPoints[startIdx] = new THREE.Vector3().addVectors(initialPoints[startIdx], lockedDelta);
-          updatedPoints[endIdx] = new THREE.Vector3().addVectors(initialPoints[endIdx], lockedDelta);
+          // Same direction, update both points if connected
+          const initStart = initialChainPositions[chain.indexOf(startIdx)] || points[startIdx].clone();
+          const initEnd = initialChainPositions[chain.indexOf(endIdx)] || points[endIdx].clone();
+          updatedPoints[startIdx] = new THREE.Vector3().addVectors(initStart, lockedDelta);
+          updatedPoints[endIdx] = new THREE.Vector3().addVectors(initEnd, lockedDelta);
         }
       }
     });

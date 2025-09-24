@@ -134,11 +134,7 @@ export const getMiterOffset = (dir: THREE.Vector3, prevDir: THREE.Vector3, thick
   return thickness / Math.tan(angle / 2);
 };
 
-export const getColinearChain = (
-  rooms: Room[],
-  points: THREE.Vector3[],
-  active: ActiveWallData
-): number[] => {
+export const getColinearChain = (rooms: Room[], points: THREE.Vector3[], active: ActiveWallData): number[] => {
   const { roomIndex, wallIndex } = active;
   const activeRoom = rooms[roomIndex];
   const len = activeRoom.length;
@@ -151,32 +147,37 @@ export const getColinearChain = (
 
   const activeDir = getDir(activeRoom, wallIndex);
   const chainSet = new Set<number>();
+  const visitedSegments = new Set<string>(); // To prevent cycles
+
+  // Add initial segment points
   const startPoint = activeRoom[wallIndex];
   const endPoint = activeRoom[(wallIndex + 1) % len];
-
   chainSet.add(startPoint);
   chainSet.add(endPoint);
+  visitedSegments.add(`${roomIndex}-${wallIndex}`);
 
-  // Function to extend chain from a point in a direction
-  const extendChain = (pointIdx: number, dir: THREE.Vector3, isForward: boolean, depth = 0) => {
-    if (depth > 10) return; // Prevent infinite loops
+  // Recursive function to extend chain from a point in a direction
+  const extendChain = (pointIdx: number, dir: THREE.Vector3, isForward: boolean) => {
     rooms.forEach((r, rIdx) => {
       const rLen = r.length;
       for (let sIdx = 0; sIdx < rLen; sIdx++) {
+        const segKey = `${rIdx}-${sIdx}`;
+        if (visitedSegments.has(segKey)) continue;
+
         const sStart = r[sIdx];
         const sEnd = r[(sIdx + 1) % rLen];
-        if ((sStart === pointIdx || sEnd === pointIdx) && !chainSet.has(sEnd) && !chainSet.has(sStart)) {
+        if (sStart === pointIdx || sEnd === pointIdx) {
           const segDir = getDir(r, sIdx);
           const angle = dir.angleTo(segDir);
           const revAngle = dir.angleTo(segDir.clone().negate());
-          if (angle < 1e-2 || revAngle < 1e-2) { // Colinear
-            const nextPoint = (sStart === pointIdx) ? sEnd : sStart;
-            chainSet.add(nextPoint);
-            extendChain(nextPoint, segDir, isForward, depth + 1);
-          } else if (angle < Math.PI / 2 + 1e-2 && !isForward) { // Perpendicular backward (T-junction)
-            const nextPoint = (sStart === pointIdx) ? sEnd : sStart;
-            chainSet.add(nextPoint);
-            extendChain(nextPoint, segDir, false, depth + 1);
+          if (angle < 1e-2 || revAngle < 1e-2) {
+            // Colinear
+            visitedSegments.add(segKey);
+            const nextPoint = sStart === pointIdx ? sEnd : sStart;
+            if (!chainSet.has(nextPoint)) {
+              chainSet.add(nextPoint);
+              extendChain(nextPoint, segDir, isForward);
+            }
           }
         }
       }
@@ -189,13 +190,16 @@ export const getColinearChain = (
 
   // Order the chain along the line
   const orderedChain: number[] = [];
-  let current = Array.from(chainSet).find((idx) => {
-    let degree = 0;
-    rooms.forEach((r) => r.forEach((p, i) => {
-      if (p === idx) degree++;
-    }));
-    return degree === 1; // Find an endpoint
-  }) || startPoint;
+  let current =
+    Array.from(chainSet).find((idx) => {
+      let degree = 0;
+      rooms.forEach((r) =>
+        r.forEach((p, i) => {
+          if (p === idx) degree++;
+        })
+      );
+      return degree === 1; // Find endpoint
+    }) || startPoint;
 
   while (current !== undefined && orderedChain.length < chainSet.size) {
     orderedChain.push(current);
