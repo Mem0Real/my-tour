@@ -1,3 +1,4 @@
+import { ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
 
 export interface Children {
@@ -35,7 +36,7 @@ export interface WallProps {
   id?: number;
   rooms?: Room[];
 
-  onPointerDown?: (e: any) => void;
+  onPointerDown?: (e: ThreeEvent<MouseEvent>) => void;
 }
 
 export interface WallData {
@@ -67,17 +68,17 @@ export interface ActiveWallData {
 
 export type ToolHandlers = {
   // Add
-  onPointerDown?: (e: any) => void;
-  onPointerMove?: (e: any) => void;
-  onPointerUp?: (e: any) => void;
-  onRightClick?: (e: any) => void;
+  onPointerDown?: (e: ThreeEvent<MouseEvent>) => void;
+  onPointerMove?: (e: ThreeEvent<MouseEvent>) => void;
+  onPointerUp?: (e: ThreeEvent<MouseEvent>) => void;
+  onRightClick?: (e: ThreeEvent<MouseEvent>) => void;
   onKeyDown?: (e: KeyboardEvent) => void;
 
   // Edit
-  handlePointerDown?: (e: any, wallData?: ActiveWallData) => void;
-  handleRightClick?: (e: any) => void;
-  handlePointerOver?: (e: any, wallData?: ActiveWallData) => void;
+  handlePointerDown?: (e: ThreeEvent<MouseEvent>, wallData?: ActiveWallData) => void;
+  handleRightClick?: (e: ThreeEvent<MouseEvent>) => void;
+  handlePointerOver?: (e: ThreeEvent<MouseEvent>, wallData?: ActiveWallData) => void;
   handlePointerOut?: () => void;
-  handlePointerMove?: (e: any) => void;
+  handlePointerMove?: (e: ThreeEvent<MouseEvent>) => void;
   handlePointerUp?: () => void;
 };

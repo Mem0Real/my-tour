@@ -8,7 +8,7 @@ import { useTheme } from 'next-themes';
 
 import { r3f } from '@/utils/globals';
 import { cursorTypeAtom } from '@/utils/atoms/ui';
-import { Children } from '@/utils/definitions';
+// import { Children } from '@/utils/definitions';
 
 export const CanvasBase = () => {
   const cursorType = useAtomValue(cursorTypeAtom);

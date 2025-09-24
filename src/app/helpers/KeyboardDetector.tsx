@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAtom, useSetAtom } from 'jotai';
+import { useSetAtom } from 'jotai';
 
 import { keyPressedAtom } from '@/utils/atoms/ui';
 
@@ -33,7 +33,7 @@ export function KeyboardDetector() {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [setKeyPressed, shiftPressed]);
 
   return null;
 }

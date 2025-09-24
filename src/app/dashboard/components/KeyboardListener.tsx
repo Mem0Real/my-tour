@@ -39,7 +39,7 @@ export const KeyboardListener = () => {
         setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
         break;
     }
-  }, [keyPressed, setActiveTool, setCameraType, setIsCollapsed, setTheme]);
+  }, [keyPressed, setActiveTool, setCameraType, setIsCollapsed, setTheme, ORTHOGRAPHIC, PERSPECTIVE]);
 
   return null;
 };

@@ -39,13 +39,16 @@ export const AddInterface = ({ children }: Children) => {
 
   const [currentLoop, setCurrentLoop] = useState<number[]>([]); // Indices into points
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && isDrawing && currentLoop.length > 0) {
-      setCurrentLoop((prev) => prev.slice(0, -1));
-      setPreviewPoint(null);
-      if (currentLoop.length <= 1) setIsDrawing(false);
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isDrawing && currentLoop.length > 0) {
+        setCurrentLoop((prev) => prev.slice(0, -1));
+        setPreviewPoint(null);
+        if (currentLoop.length <= 1) setIsDrawing(false);
+      }
+    },
+    [isDrawing, currentLoop]
+  );
 
   useEffect(() => {
     setInsert('wall');

@@ -28,16 +28,16 @@ export const activeWallAtom = atom<ActiveWallData | null>(null);
 export const activeEndpointAtom = atom<EndpointRef | null>(null);
 
 // Optional: Keep updateWallAtom if needed for legacy, but refactor to use points/rooms directly
-export const updateWallAtom = atom(
-  null,
-  (get, set, { roomIndex, wallIndex, newWall }: { roomIndex: number; wallIndex: number; newWall: Wall }) => {
-    const rooms = get(roomsAtom);
-    const points = get(pointsAtom);
-    const updatedRooms = rooms.map((room, i) => {
-      if (i !== roomIndex) return room;
-      return room.map((wall, j) => (j === wallIndex ? wall : wall));
-    });
-    // Note: With shared points, updating wall means updating points indices or positions
-    set(roomsAtom, updatedRooms);
-  }
-);
+// export const updateWallAtom = atom(
+//   null,
+//   (get, set, { roomIndex, wallIndex, newWall }: { roomIndex: number; wallIndex: number; newWall: Wall }) => {
+//     const rooms = get(roomsAtom);
+//     const points = get(pointsAtom);
+//     const updatedRooms = rooms.map((room, i) => {
+//       if (i !== roomIndex) return room;
+//       return room.map((wall, j) => (j === wallIndex ? wall : wall));
+//     });
+//     // Note: With shared points, updating wall means updating points indices or positions
+//     set(roomsAtom, updatedRooms);
+//   }
+// );
