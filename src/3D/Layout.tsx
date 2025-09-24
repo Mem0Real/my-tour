@@ -12,7 +12,8 @@ const Layout = ({ children, className = '' }: Children & { className?: string })
   return (
     <div ref={ref} className={`relative w-full h-full overflow-hidden ${className}`}>
       {children}
-      <CanvasBase eventSource={ref} eventPrefix='client' />
+      {/* <CanvasBase eventSource={ref} eventPrefix='client' /> */}
+      <CanvasBase />
     </div>
   );
 };

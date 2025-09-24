@@ -47,7 +47,7 @@ export const AddInterface = ({ children }: Children) => {
         if (currentLoop.length <= 1) setIsDrawing(false);
       }
     },
-    [isDrawing, currentLoop]
+    [isDrawing, currentLoop, setIsDrawing, setPreviewPoint]
   );
 
   useEffect(() => {
