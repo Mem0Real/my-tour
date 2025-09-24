@@ -133,46 +133,89 @@ export const getMiterOffset = (dir: THREE.Vector3, prevDir: THREE.Vector3, thick
   if (angle < 1e-3) return 0;
   return thickness / Math.tan(angle / 2);
 };
-export const getColinearChain = (rooms: Room[], points: THREE.Vector3[], active: ActiveWallData): number[] => {
-  const { roomIndex, wallIndex } = active;
-  const room = rooms[roomIndex];
-  const len = room.length;
 
-  const getDir = (segIdx: number) => {
-    const start = room[segIdx];
-    const end = room[(segIdx + 1) % len];
+export const getColinearChain = (
+  rooms: Room[],
+  points: THREE.Vector3[],
+  active: ActiveWallData
+): number[] => {
+  const { roomIndex, wallIndex } = active;
+  const activeRoom = rooms[roomIndex];
+  const len = activeRoom.length;
+
+  const getDir = (r: Room, segIdx: number) => {
+    const start = r[segIdx];
+    const end = r[(segIdx + 1) % r.length];
     return points[end].clone().sub(points[start]).normalize();
   };
 
-  const activeDir = getDir(wallIndex);
+  const activeDir = getDir(activeRoom, wallIndex);
+  const chainSet = new Set<number>();
+  const startPoint = activeRoom[wallIndex];
+  const endPoint = activeRoom[(wallIndex + 1) % len];
 
-  // Extend backward
-  let currentStart = wallIndex;
-  while (true) {
-    const prev = (currentStart - 1 + len) % len;
-    const prevDir = getDir(prev);
-    const angle = activeDir.angleTo(prevDir);
-    if (angle > 1e-3 && Math.abs(angle - Math.PI) > 1e-3) break;
-    currentStart = prev;
+  chainSet.add(startPoint);
+  chainSet.add(endPoint);
+
+  // Function to extend chain from a point in a direction
+  const extendChain = (pointIdx: number, dir: THREE.Vector3, isForward: boolean, depth = 0) => {
+    if (depth > 10) return; // Prevent infinite loops
+    rooms.forEach((r, rIdx) => {
+      const rLen = r.length;
+      for (let sIdx = 0; sIdx < rLen; sIdx++) {
+        const sStart = r[sIdx];
+        const sEnd = r[(sIdx + 1) % rLen];
+        if ((sStart === pointIdx || sEnd === pointIdx) && !chainSet.has(sEnd) && !chainSet.has(sStart)) {
+          const segDir = getDir(r, sIdx);
+          const angle = dir.angleTo(segDir);
+          const revAngle = dir.angleTo(segDir.clone().negate());
+          if (angle < 1e-2 || revAngle < 1e-2) { // Colinear
+            const nextPoint = (sStart === pointIdx) ? sEnd : sStart;
+            chainSet.add(nextPoint);
+            extendChain(nextPoint, segDir, isForward, depth + 1);
+          } else if (angle < Math.PI / 2 + 1e-2 && !isForward) { // Perpendicular backward (T-junction)
+            const nextPoint = (sStart === pointIdx) ? sEnd : sStart;
+            chainSet.add(nextPoint);
+            extendChain(nextPoint, segDir, false, depth + 1);
+          }
+        }
+      }
+    });
+  };
+
+  // Extend from start and end
+  extendChain(startPoint, activeDir.clone().negate(), false);
+  extendChain(endPoint, activeDir, true);
+
+  // Order the chain along the line
+  const orderedChain: number[] = [];
+  let current = Array.from(chainSet).find((idx) => {
+    let degree = 0;
+    rooms.forEach((r) => r.forEach((p, i) => {
+      if (p === idx) degree++;
+    }));
+    return degree === 1; // Find an endpoint
+  }) || startPoint;
+
+  while (current !== undefined && orderedChain.length < chainSet.size) {
+    orderedChain.push(current);
+    let next: number | undefined;
+    rooms.forEach((r) => {
+      const rLen = r.length;
+      for (let sIdx = 0; sIdx < rLen; sIdx++) {
+        const sStart = r[sIdx];
+        const sEnd = r[(sIdx + 1) % rLen];
+        if (sStart === current && chainSet.has(sEnd) && !orderedChain.includes(sEnd)) {
+          next = sEnd;
+          break;
+        } else if (sEnd === current && chainSet.has(sStart) && !orderedChain.includes(sStart)) {
+          next = sStart;
+          break;
+        }
+      }
+    });
+    current = next!;
   }
 
-  // Extend forward
-  let currentEnd = wallIndex;
-  while (true) {
-    const next = (currentEnd + 1) % len;
-    const nextDir = getDir(currentEnd);
-    const angle = activeDir.angleTo(nextDir);
-    if (angle > 1e-3 && Math.abs(angle - Math.PI) > 1e-3) break;
-    currentEnd = next;
-  }
-
-  // Collect unique point indices in the chain
-  const chain: number[] = [];
-  for (let i = currentStart; ; i = (i + 1) % len) {
-    chain.push(room[i]);
-    if (i === currentEnd) break;
-  }
-  chain.push(room[(currentEnd + 1) % len]); // Include the final end point
-
-  return [...new Set(chain)]; // Ensure unique
+  return orderedChain;
 };
