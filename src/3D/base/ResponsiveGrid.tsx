@@ -22,9 +22,9 @@ export const ResponsiveGrid = () => {
       infiniteGrid
       cellSize={0}
       sectionSize={sectionSize}
-      sectionThickness={1.0}
+      sectionThickness={0.7}
       sectionColor={theme === 'dark' ? '#ededed' : '#848488'}
-      fadeDistance={120}
+      fadeDistance={220}
       fadeStrength={1}
       frustumCulled={false}
     />

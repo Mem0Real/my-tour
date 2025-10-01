@@ -26,7 +26,7 @@ export const Cameras = () => {
       camera.position.set(5, 1.6, 5);
       camera.lookAt(0, 1.6, 0);
     } else {
-      camera.position.set(0, 10, 0);
+      camera.position.set(0, 20, 0);
       camera.lookAt(0, 0, 0);
     }
   }, [camera, cameraType]);
@@ -35,7 +35,7 @@ export const Cameras = () => {
 
   switch (cameraType) {
     case PERSPECTIVE:
-      return <PerspectiveCamera makeDefault fov={60} near={0.1} far={150} />;
+      return <PerspectiveCamera makeDefault fov={60} near={0.1} far={500} />;
     case ORTHOGRAPHIC:
       return (
         <OrthographicCamera

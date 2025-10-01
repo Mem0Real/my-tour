@@ -21,6 +21,7 @@ export const Platform = () => {
       case 'add':
         onPointerMove?.(e);
         break;
+
       case 'edit':
         handlePointerMove?.(e);
         break;

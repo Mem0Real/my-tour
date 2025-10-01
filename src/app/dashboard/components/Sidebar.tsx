@@ -13,10 +13,10 @@ export const Sidebar = () => {
     <div className='fixed left-0 top-1/3 -translate-y-1/2 w-fit  bg-neutral-800/80 text-neutral-200 dark:bg-neutral-200/80 shadow-lg shadow-neutral-600 border-r border-t border-neutral-500 dark:text-neutral-900 rounded-r-sm transition-all duration-300 ease-in-out z-10 py-2'>
       {/* Toggle Button */}
       <button
-        className='absolute -right-8 top-2 rounded-r-lg p-2  bg-neutral-400 hover:bg-neutral-500 cursor-pointer'
+        className='absolute -right-6 top-2 rounded-r-lg p-2  bg-neutral-400 hover:bg-neutral-500 cursor-pointer'
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
-        {isCollapsed ? <ChevronRight size={18} color='#212122' /> : <ChevronLeft size={18} color='#212122' />}
+        {isCollapsed ? <ChevronRight size={12} color='#212122' /> : <ChevronLeft size={12} color='#212122' />}
       </button>
 
       {/* Sidebar Content */}
@@ -25,7 +25,7 @@ export const Sidebar = () => {
           {items?.map((item, i) => (
             <li key={item.concat(`-${i}`)}>
               <button
-                className={`w-full text-left px-4 py-2 rounded-md transition-colors duration-200 cursor-pointer ${
+                className={`w-full text-left px-4 py-2 rounded-md transition-colors duration-200 cursor-pointer text-xs ${
                   insert === item.toLowerCase()
                     ? 'ring-2 dark:ring-neutral-800/40 rounded-lg'
                     : 'hover:ring hover:ring-neutral-200 dark:hover:ring-neutral-700 '
