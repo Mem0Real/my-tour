@@ -20,10 +20,12 @@ export const KeyboardListener = () => {
 
     switch (keyPressed) {
       case 'a':
+        console.log('called');
         setActiveTool('add');
         break;
 
       case 'e':
+        console.log('called');
         setActiveTool('edit');
         break;
 
@@ -39,7 +41,7 @@ export const KeyboardListener = () => {
         setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
         break;
     }
-  }, [keyPressed, setActiveTool, setCameraType, setIsCollapsed, setTheme, ORTHOGRAPHIC, PERSPECTIVE]);
+  }, [keyPressed, setActiveTool, setCameraType, setIsCollapsed, ORTHOGRAPHIC, PERSPECTIVE]);
 
   return null;
 };

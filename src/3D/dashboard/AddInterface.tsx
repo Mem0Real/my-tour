@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { cameraTypeAtom, cursorTypeAtom, insertAtom, wallHeightAtom } from '@/utils/atoms/ui';
+import { cameraTypeAtom, cursorTypeAtom, insertAtom } from '@/utils/atoms/ui';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { isDrawingAtom, previewPointAtom, snapCuesAtom } from '@/utils/atoms/drawing';
 import { pointsAtom, roomsAtom } from '@/utils/atoms/drawing';
@@ -25,7 +25,6 @@ export const AddInterface = ({ children }: Children) => {
   const [previewPoint, setPreviewPoint] = useAtom(previewPointAtom);
 
   const cameraType = useAtomValue(cameraTypeAtom);
-  const wallHeight = useAtomValue(wallHeightAtom);
 
   const setSnapCues = useSetAtom(snapCuesAtom);
   const setInsert = useSetAtom(insertAtom);

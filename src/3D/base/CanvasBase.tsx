@@ -27,7 +27,8 @@ export const CanvasBase = () => {
       className={`w-full h-full cursor-${cursorType || 'auto'} antialiased`}
       style={{ position: 'absolute', top: 0, left: 0 }}
     >
-      <color attach='background' args={[theme === 'dark' ? '#212122' : '#ededed']} />
+      {/* <color attach='background' args={[theme === 'dark' ? '#212122' : '#ededed']} /> */}
+      <color attach='background' args={[theme === 'dark' ? '#212122' : '#fdfdfd']} />
       <r3f.Out />
       <Preload all />
     </Canvas>
