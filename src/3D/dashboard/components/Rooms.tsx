@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai';
 import * as THREE from 'three';
 
 import { pointsAtom, roomsAtom } from '@/utils/atoms/drawing';
-import { CameraTypes, WALL_HEIGHT, WALL_THICKNESS } from '@/utils/constants';
+import { CameraTypes } from '@/utils/constants';
 
 import Wall from '@/3D/dashboard/components/Wall';
 import LengthOverlay from '@/3D/dashboard/components/LengthOverlay';
@@ -76,17 +76,13 @@ export const Rooms = () => {
                   <Wall
                     start={start}
                     end={end}
-                    thickness={WALL_THICKNESS}
-                    height={WALL_HEIGHT}
                     color='white'
                     prevDir={prevDir}
                     nextDir={nextDir}
                     roomIndex={roomIndex}
                     id={wIdx}
                   />
-                  {cameraType === CameraTypes.ORTHOGRAPHIC && (
-                    <LengthOverlay start={start} end={end} thickness={WALL_THICKNESS} />
-                  )}
+                  {cameraType === CameraTypes.ORTHOGRAPHIC && <LengthOverlay start={start} end={end} />}
                 </React.Fragment>
               );
             })}

@@ -2,22 +2,14 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { cameraTypeAtom, cursorTypeAtom, insertAtom } from '@/utils/atoms/ui';
+import { cameraTypeAtom, cursorTypeAtom, insertAtom, wallHeightAtom } from '@/utils/atoms/ui';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { isDrawingAtom, previewPointAtom, snapCuesAtom } from '@/utils/atoms/drawing';
 import { pointsAtom, roomsAtom } from '@/utils/atoms/drawing';
 
 import { Children } from '@/utils/definitions';
 import { snapToPoints, straighten } from '@/3D/helpers/wallHelper';
-import {
-  CameraTypes,
-  CursorTypes,
-  SNAP_DISTANCE,
-  SNAP_TOLERANCE,
-  STRAIGHT_THRESHOLD,
-  WALL_HEIGHT,
-  WALL_THICKNESS,
-} from '@/utils/constants';
+import { CameraTypes, CursorTypes, SNAP_DISTANCE, SNAP_TOLERANCE, STRAIGHT_THRESHOLD } from '@/utils/constants';
 
 import Wall from '@/3D/dashboard/components/Wall';
 import LengthOverlay from '@/3D/dashboard/components/LengthOverlay';
@@ -28,14 +20,16 @@ import { ThreeEvent } from '@react-three/fiber';
 export const AddInterface = ({ children }: Children) => {
   const [points, setPoints] = useAtom(pointsAtom);
   const [rooms, setRooms] = useAtom(roomsAtom);
-  const setInsert = useSetAtom(insertAtom);
-  const setCursor = useSetAtom(cursorTypeAtom);
 
   const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
   const [previewPoint, setPreviewPoint] = useAtom(previewPointAtom);
 
   const cameraType = useAtomValue(cameraTypeAtom);
+  const wallHeight = useAtomValue(wallHeightAtom);
+
   const setSnapCues = useSetAtom(snapCuesAtom);
+  const setInsert = useSetAtom(insertAtom);
+  const setCursor = useSetAtom(cursorTypeAtom);
 
   const [currentLoop, setCurrentLoop] = useState<number[]>([]); // Indices into points
 
@@ -200,9 +194,9 @@ export const AddInterface = ({ children }: Children) => {
 
         return (
           <React.Fragment key={`current-${i}`}>
-            <Wall id={i} start={start} end={end} thickness={WALL_THICKNESS} height={WALL_HEIGHT} color='white' />
+            <Wall id={i} start={start} end={end} color='white' />
             {i === currentLoop.length - 1 && previewPoint && (
-              <LengthOverlay start={start} end={previewPoint} thickness={WALL_THICKNESS} visible />
+              <LengthOverlay start={start} end={previewPoint} visible />
             )}
           </React.Fragment>
         );

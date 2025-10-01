@@ -3,10 +3,15 @@ import React, { FC, useMemo } from 'react';
 import { getMiterOffset } from '@/3D/helpers/wallHelper';
 import { WallProps } from '@/utils/definitions';
 import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
+import { useAtomValue } from 'jotai';
+import { wallHeightAtom, wallThicknessAtom } from '@/utils/atoms/ui';
 
 const Wall: FC<WallProps> = React.memo(
-  ({ start, end, thickness = 0.1, height = 1.5, color = 'white', prevDir = null, nextDir = null, roomIndex, id }) => {
-    const handlers = useToolInput()
+  ({ start, end, color = 'white', prevDir = null, nextDir = null, roomIndex, id }) => {
+    const handlers = useToolInput();
+    
+    const thickness = useAtomValue(wallThicknessAtom);
+    const height = useAtomValue(wallHeightAtom);
 
     const wallDir = new THREE.Vector3().subVectors(end, start).setY(0).normalize();
 
@@ -60,6 +65,6 @@ const Wall: FC<WallProps> = React.memo(
   }
 );
 
-Wall.displayName = "Wall"
+Wall.displayName = 'Wall';
 
 export default Wall;

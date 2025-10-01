@@ -15,3 +15,7 @@ export const insertAtom = atom<string | null>(null);
 export const toolsCollapsedAtom = atomWithStorage<boolean>('collapsed', true);
 
 // Edit UI
+
+// Options
+export const wallHeightAtom = atom<number>(2.1);
+export const wallThicknessAtom = atom<number>(0.1);

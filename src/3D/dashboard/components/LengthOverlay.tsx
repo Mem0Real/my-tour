@@ -12,8 +12,6 @@ interface LengthOverlayProps {
 }
 
 const LengthOverlay: React.FC<LengthOverlayProps> = React.memo(({ start, end, visible = false, rooms }) => {
-  console.log(rooms?.length);
-
   if (end.distanceTo(start) < 0.005) return null;
 
   const dir = new THREE.Vector3().subVectors(end, start).normalize();
@@ -114,18 +112,6 @@ const LengthOverlay: React.FC<LengthOverlayProps> = React.memo(({ start, end, vi
           {length.toFixed(2)} cm
         </Html>
       )}
-
-      {/* <Text
-            position={innerMid}
-            fontSize={0.15}
-            color='#1a1a1a'
-            anchorX='center'
-            anchorY='middle'
-            outlineColor='white'
-            outlineWidth={0.01}
-          >
-            {length.toFixed(2)} cm
-          </Text> */}
     </>
   );
 });
