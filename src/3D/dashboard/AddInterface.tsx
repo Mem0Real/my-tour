@@ -16,32 +16,59 @@ import LengthOverlay from '@/3D/dashboard/components/LengthOverlay';
 
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
 import { ThreeEvent } from '@react-three/fiber';
+import useMousePosition from '@/app/helpers/cursorPosition';
 
 export const AddInterface = ({ children }: Children) => {
   const [points, setPoints] = useAtom(pointsAtom);
   const [rooms, setRooms] = useAtom(roomsAtom);
-
   const [isDrawing, setIsDrawing] = useAtom(isDrawingAtom);
   const [previewPoint, setPreviewPoint] = useAtom(previewPointAtom);
 
   const cameraType = useAtomValue(cameraTypeAtom);
-
   const setSnapCues = useSetAtom(snapCuesAtom);
   const setInsert = useSetAtom(insertAtom);
   const setCursor = useSetAtom(cursorTypeAtom);
 
   const [currentLoop, setCurrentLoop] = useState<number[]>([]); // Indices into points
+  const [shiftPressed, setShiftPressed] = useState<boolean>(false);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isDrawing && currentLoop.length > 0) {
-        setCurrentLoop((prev) => prev.slice(0, -1));
-        setPreviewPoint(null);
-        if (currentLoop.length <= 1) setIsDrawing(false);
+      switch (e.key) {
+        case 'Escape':
+          if (!isDrawing || !currentLoop.length) return;
+
+          setCurrentLoop((prev) => prev.slice(0, -1));
+          setPreviewPoint(null);
+
+          if (currentLoop.length <= 1) setIsDrawing(false);
+          break;
+
+        //   case 'Enter':
+        //     const pos = useMousePosition();
+
+        //     const roomToAdd = [...currentLoop, pos];
+
+        // setRooms((prev) => [...prev, roomToAdd]);
+        // setCurrentLoop([]);
+        // setIsDrawing(false);
+        //   break;
+
+        case 'Shift':
+          setShiftPressed(true);
+          break;
       }
     },
     [isDrawing, currentLoop, setIsDrawing, setPreviewPoint]
   );
+
+  const handleKeyUp = (e: KeyboardEvent) => {
+    switch (e.key) {
+      case 'Shift':
+        setShiftPressed(false);
+        break;
+    }
+  };
 
   useEffect(() => {
     setInsert('wall');
@@ -50,7 +77,12 @@ export const AddInterface = ({ children }: Children) => {
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
   }, [currentLoop, isDrawing, handleKeyDown]);
 
   const handlePointerDown = (e: ThreeEvent<MouseEvent>) => {
@@ -128,7 +160,7 @@ export const AddInterface = ({ children }: Children) => {
       setRooms((prev) => [...prev, roomToAdd]);
       setCurrentLoop([]);
       setIsDrawing(false);
-    } else if (snapResult.snappedWall && snapResult.snappedPointIdx === undefined) {
+    } else if ((snapResult.snappedWall && snapResult.snappedPointIdx === undefined) || shiftPressed) {
       const roomToAdd = [...currentLoop, newIdx];
       setRooms((prev) => [...prev, roomToAdd]);
       setCurrentLoop([]);
@@ -194,9 +226,7 @@ export const AddInterface = ({ children }: Children) => {
         return (
           <React.Fragment key={`current-${i}`}>
             <Wall id={i} start={start} end={end} color='white' />
-            {i === currentLoop.length - 1 && previewPoint && (
-              <LengthOverlay start={start} end={previewPoint} visible />
-            )}
+            {i === currentLoop.length - 1 && previewPoint && <LengthOverlay start={start} end={previewPoint} visible />}
           </React.Fragment>
         );
       })}
