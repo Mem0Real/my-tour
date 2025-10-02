@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import * as THREE from 'three';
 
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
-import { cameraTypeAtom, cursorTypeAtom } from '@/utils/atoms/ui';
+import { cameraTypeAtom, cursorPosAtom, cursorTypeAtom, menuVisibleAtom } from '@/utils/atoms/ui';
 import { CameraTypes, CursorTypes } from '@/utils/constants';
 import { Children, ActiveWallData } from '@/utils/definitions';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -23,7 +23,10 @@ export function EditInterface({ children }: Children) {
   const [activeEndpoint, setActiveEndpoint] = useAtom(activeEndpointAtom);
 
   const cameraType = useAtomValue(cameraTypeAtom);
+
   const setCursor = useSetAtom(cursorTypeAtom);
+  const setMenuVisible = useSetAtom(menuVisibleAtom);
+  const setCursorPos = useSetAtom(cursorPosAtom);
 
   useEffect(() => {
     setCursor(CursorTypes.POINTER);
@@ -153,6 +156,10 @@ export function EditInterface({ children }: Children) {
   // Right click handler
   const handleRightClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
+    if (e.button !== 2) return;
+
+    setMenuVisible(true);
+    setCursorPos(e.point.clone());
   };
 
   const handlePointerOver = (e: ThreeEvent<MouseEvent>, wallData?: ActiveWallData) => {

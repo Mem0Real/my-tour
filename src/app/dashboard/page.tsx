@@ -1,6 +1,6 @@
 'use client';
 
-import { useAtom } from 'jotai';
+import { useAtomValue } from 'jotai';
 import { activeToolAtom } from '@/utils/atoms/ui';
 
 import { Tab } from '@/app/dashboard/components/Tab';
@@ -15,7 +15,7 @@ import { KeyboardListener } from '@/app/dashboard/components/KeyboardListener';
 import { Options } from '@/app/dashboard/components/Options';
 
 const ActiveInterface = ({ children }: Children) => {
-  const [activeTool] = useAtom(activeToolAtom);
+  const activeTool = useAtomValue(activeToolAtom);
 
   switch (activeTool) {
     case 'add':
@@ -37,6 +37,7 @@ const ActiveInterface = ({ children }: Children) => {
 };
 
 const Dashboard = () => {
+
   return (
     <>
       <KeyboardListener />

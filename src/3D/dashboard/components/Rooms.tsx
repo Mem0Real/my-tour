@@ -8,12 +8,14 @@ import { CameraTypes } from '@/utils/constants';
 import Wall from '@/3D/dashboard/components/Wall';
 import LengthOverlay from '@/3D/dashboard/components/LengthOverlay';
 
-import { cameraTypeAtom } from '@/utils/atoms/ui';
+import { cameraTypeAtom, menuVisibleAtom } from '@/utils/atoms/ui';
+import { Menu } from '@/app/dashboard/components/Menu';
 
 export const Rooms = () => {
   const points = useAtomValue(pointsAtom);
   const rooms = useAtomValue(roomsAtom);
   const cameraType = useAtomValue(cameraTypeAtom);
+  const menuVisible = useAtomValue(menuVisibleAtom);
 
   return (
     <>
@@ -82,7 +84,12 @@ export const Rooms = () => {
                     roomIndex={roomIndex}
                     id={wIdx}
                   />
-                  {cameraType === CameraTypes.ORTHOGRAPHIC && <LengthOverlay start={start} end={end} />}
+                  {cameraType === CameraTypes.ORTHOGRAPHIC && (
+                    <group>
+                      <LengthOverlay start={start} end={end} />
+                      {menuVisible && <Menu />}
+                    </group>
+                  )}
                 </React.Fragment>
               );
             })}

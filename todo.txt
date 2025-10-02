@@ -1,0 +1,3 @@
+# Near future todo plan
+1) Right click show menu to delete a wall
+2) Track camera position to make nearest wall transparent

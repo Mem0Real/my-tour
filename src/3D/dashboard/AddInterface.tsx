@@ -16,7 +16,6 @@ import LengthOverlay from '@/3D/dashboard/components/LengthOverlay';
 
 import { ToolInputProvider } from '@/3D/dashboard/components/ToolInputContext';
 import { ThreeEvent } from '@react-three/fiber';
-import useMousePosition from '@/app/helpers/cursorPosition';
 
 export const AddInterface = ({ children }: Children) => {
   const [points, setPoints] = useAtom(pointsAtom);
@@ -43,16 +42,6 @@ export const AddInterface = ({ children }: Children) => {
 
           if (currentLoop.length <= 1) setIsDrawing(false);
           break;
-
-        //   case 'Enter':
-        //     const pos = useMousePosition();
-
-        //     const roomToAdd = [...currentLoop, pos];
-
-        // setRooms((prev) => [...prev, roomToAdd]);
-        // setCurrentLoop([]);
-        // setIsDrawing(false);
-        //   break;
 
         case 'Shift':
           setShiftPressed(true);
