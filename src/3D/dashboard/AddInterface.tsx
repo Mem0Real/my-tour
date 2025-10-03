@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { cameraTypeAtom, cursorTypeAtom, insertAtom } from '@/utils/atoms/ui';
+import { cameraTypeAtom, cursorTypeAtom, insertAtom, rulerAtom } from '@/utils/atoms/ui';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { isDrawingAtom, previewPointAtom, snapCuesAtom } from '@/utils/atoms/drawing';
 import { pointsAtom, roomsAtom } from '@/utils/atoms/drawing';
@@ -24,6 +24,8 @@ export const AddInterface = ({ children }: Children) => {
   const [previewPoint, setPreviewPoint] = useAtom(previewPointAtom);
 
   const cameraType = useAtomValue(cameraTypeAtom);
+  const ruler = useAtomValue(rulerAtom);
+
   const setSnapCues = useSetAtom(snapCuesAtom);
   const setInsert = useSetAtom(insertAtom);
   const setCursor = useSetAtom(cursorTypeAtom);
@@ -215,7 +217,9 @@ export const AddInterface = ({ children }: Children) => {
         return (
           <React.Fragment key={`current-${i}`}>
             <Wall id={i} start={start} end={end} color='white' />
-            {i === currentLoop.length - 1 && previewPoint && <LengthOverlay start={start} end={previewPoint} visible />}
+            {i === currentLoop.length - 1 && previewPoint && ruler && (
+              <LengthOverlay start={start} end={previewPoint} visible />
+            )}
           </React.Fragment>
         );
       })}

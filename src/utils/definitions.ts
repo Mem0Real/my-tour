@@ -76,7 +76,7 @@ export type ToolHandlers = {
 
   // Edit
   handlePointerDown?: (e: ThreeEvent<MouseEvent>, wallData?: ActiveWallData) => void;
-  handleRightClick?: (e: ThreeEvent<MouseEvent>) => void;
+  handleRightClick?: (e: ThreeEvent<MouseEvent>, wallData?: ActiveWallData) => void;
   handlePointerOver?: (e: ThreeEvent<MouseEvent>, wallData?: ActiveWallData) => void;
   handlePointerOut?: () => void;
   handlePointerMove?: (e: ThreeEvent<MouseEvent>) => void;

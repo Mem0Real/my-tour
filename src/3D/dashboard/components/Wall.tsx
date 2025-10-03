@@ -4,14 +4,16 @@ import { getMiterOffset } from '@/3D/helpers/wallHelper';
 import { WallProps } from '@/utils/definitions';
 import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
 import { useAtomValue } from 'jotai';
-import { wallHeightAtom, wallThicknessAtom } from '@/utils/atoms/ui';
+import { menuVisibleAtom, wallHeightAtom, wallThicknessAtom } from '@/utils/atoms/ui';
+import { Menu } from '@/app/dashboard/components/Menu';
 
 const Wall: FC<WallProps> = React.memo(
   ({ start, end, color = 'white', prevDir = null, nextDir = null, roomIndex, id }) => {
     const handlers = useToolInput();
-    
+
     const thickness = useAtomValue(wallThicknessAtom);
     const height = useAtomValue(wallHeightAtom);
+    const menuVisible = useAtomValue(menuVisibleAtom);
 
     const wallDir = new THREE.Vector3().subVectors(end, start).setY(0).normalize();
 
@@ -37,30 +39,33 @@ const Wall: FC<WallProps> = React.memo(
     const angle = Math.atan2(dir.z, dir.x);
 
     return (
-      <mesh
-        position={[mid.x, height / 2, mid.z]}
-        rotation={[0, -angle, 0]}
-        onPointerDown={(e) => {
-          // e.stopPropagation();
-          if (handlers.handlePointerDown && roomIndex !== undefined && id !== undefined) {
-            handlers.handlePointerDown(e, { roomIndex, wallIndex: id });
-          }
-        }}
-        onPointerOver={(e) => {
-          if (handlers.handlePointerOver && roomIndex !== undefined && id !== undefined) {
-            handlers.handlePointerOver(e, { roomIndex, wallIndex: id });
-          }
-        }}
-        onPointerOut={handlers.handlePointerOut}
-        onContextMenu={(e) => {
-          if (handlers.handleRightClick) {
-            handlers.handleRightClick(e);
-          }
-        }}
-      >
-        <boxGeometry args={[length, height, thickness * 2]} />
-        <meshStandardMaterial color={color} opacity={1} transparent />
-      </mesh>
+      <group>
+        <mesh
+          position={[mid.x, height / 2, mid.z]}
+          rotation={[0, -angle, 0]}
+          onPointerDown={(e) => {
+            // e.stopPropagation();
+            if (handlers.handlePointerDown && roomIndex !== undefined && id !== undefined) {
+              handlers.handlePointerDown(e, { roomIndex, wallIndex: id });
+            }
+          }}
+          onPointerOver={(e) => {
+            if (handlers.handlePointerOver && roomIndex !== undefined && id !== undefined) {
+              handlers.handlePointerOver(e, { roomIndex, wallIndex: id });
+            }
+          }}
+          onPointerOut={handlers.handlePointerOut}
+          onContextMenu={(e) => {
+            if (handlers.handleRightClick) {
+              handlers.handleRightClick(e, { wallIndex: id!, roomIndex: roomIndex! });
+            }
+          }}
+        >
+          <boxGeometry args={[length, height, thickness * 2]} />
+          <meshStandardMaterial color={color} opacity={1} transparent />
+        </mesh>
+        {menuVisible !== null && <Menu />}
+      </group>
     );
   }
 );

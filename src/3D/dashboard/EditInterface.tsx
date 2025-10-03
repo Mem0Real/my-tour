@@ -154,12 +154,16 @@ export function EditInterface({ children }: Children) {
   };
 
   // Right click handler
-  const handleRightClick = (e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
+  const handleRightClick = (e: ThreeEvent<MouseEvent>, wallData?: ActiveWallData) => {
     if (e.button !== 2) return;
 
-    setMenuVisible(true);
-    setCursorPos(e.point.clone());
+    if (!wallData) {
+      setMenuVisible(null);
+      return;
+    }
+
+    setMenuVisible({ visible: true, wallData });
+    setCursorPos(e.point.clone().setY(0)); // Ensure y=0 for top-down
   };
 
   const handlePointerOver = (e: ThreeEvent<MouseEvent>, wallData?: ActiveWallData) => {

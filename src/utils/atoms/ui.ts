@@ -1,4 +1,5 @@
 import { CameraTypes, CursorTypes } from '@/utils/constants';
+import { ActiveWallData } from '@/utils/definitions';
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import * as THREE from 'three';
@@ -10,13 +11,14 @@ export const activeToolAtom = atom<string>('add');
 
 // Keyboard Items
 export const keyPressedAtom = atom<string | null>(null);
+export const rulerAtom = atomWithStorage<boolean>('ruler', true);
 
 // Add UI
 export const insertAtom = atom<string | null>(null);
 export const toolsCollapsedAtom = atomWithStorage<boolean>('collapsed', true);
 
 // Edit UI
-export const menuVisibleAtom = atom<boolean>(false);
+export const menuVisibleAtom = atom<{ visible: boolean; wallData: ActiveWallData } | null>(null);
 export const cursorPosAtom = atom<THREE.Vector3>();
 
 // Options

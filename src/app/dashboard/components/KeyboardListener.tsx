@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { activeToolAtom, cameraTypeAtom, keyPressedAtom, toolsCollapsedAtom } from '@/utils/atoms/ui';
+import { activeToolAtom, cameraTypeAtom, keyPressedAtom, rulerAtom, toolsCollapsedAtom } from '@/utils/atoms/ui';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { CameraTypes } from '@/utils/constants';
 import { useTheme } from 'next-themes';
@@ -12,6 +12,7 @@ export const KeyboardListener = () => {
   const setActiveTool = useSetAtom(activeToolAtom);
   const setCameraType = useSetAtom(cameraTypeAtom);
   const setIsCollapsed = useSetAtom(toolsCollapsedAtom);
+  const setRuler = useSetAtom(rulerAtom);
 
   const { ORTHOGRAPHIC, PERSPECTIVE } = CameraTypes;
 
@@ -39,6 +40,10 @@ export const KeyboardListener = () => {
 
       case 'd':
         setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+        break;
+
+      case 'r':
+        setRuler(prev => !prev);
         break;
     }
   }, [keyPressed, setActiveTool, setCameraType, setIsCollapsed, ORTHOGRAPHIC, PERSPECTIVE]);
