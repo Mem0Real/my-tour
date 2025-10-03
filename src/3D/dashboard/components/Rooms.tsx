@@ -81,8 +81,8 @@ export const Rooms = () => {
                     start={start}
                     end={end}
                     color='white'
-                    prevDir={prevDir}
-                    nextDir={nextDir}
+                    // prevDir={prevDir}
+                    // nextDir={nextDir}
                     roomIndex={roomIndex}
                     id={wIdx}
                   />
