@@ -63,15 +63,17 @@ export const Menu = () => {
       onPointerDown={() => console.log('click')}
     >
       <div
-        className={`z-50 px-4 py-2 bg-neutral-800/80 text-neutral-200 dark:bg-neutral-200/80 shadow-lg shadow-neutral-500/80  dark:text-neutral-900 transition-all duration-300 ease-in-out flex flex-col gap-4 items-start justify-start w-full`}
+        className={`z-50 w-full px-2 py-4 bg-neutral-800/80 text-neutral-200 dark:bg-neutral-200/80 dark:text-neutral-900 transition-all duration-300 ease-in-out flex flex-col gap-4 items-start justify-start`}
       >
         <button
-          className='bg-neutral-300 text-neutral-600 rounded-sm hover:rounded-lg px-3 py-2'
+          className='border-2 border-neutral-200 dark:border-neutral-700/70 hover:cursor-pointer rounded-sm hover:rounded-lg py-2 w-20'
           onClick={handleDelete}
         >
           Delete
         </button>
-        <button className='bg-neutral-300 text-neutral-600 rounded-sm hover:rounded-lg px-3 py-2'>Split</button>
+        <button className='border-2 border-neutral-200 dark:border-neutral-700/70 hover:cursor-pointer rounded-sm hover:rounded-lg w-20 py-2'>
+          Split
+        </button>
       </div>
     </Html>
   );

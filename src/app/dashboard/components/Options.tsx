@@ -30,7 +30,7 @@ export const Options = () => {
             defaultValue={wallHeight * 100}
             onBlur={(e) => handleChange(e, 'height')}
           />
-          <p className='text-xs italic text-neutral-300'>cm</p>
+          <p className='text-xs italic'>cm</p>
         </span>
         <span className='flex gap-2 items-center'>
           <label htmlFor='wallThickness'>Wall Thickness: </label>
@@ -41,7 +41,7 @@ export const Options = () => {
             defaultValue={wallThickness * 100}
             onBlur={(e) => handleChange(e, 'thickness')}
           />
-          <p className='text-xs italic text-neutral-300'>cm</p>
+          <p className='text-xs italic'>cm</p>
         </span>
       </div>
     </div>
