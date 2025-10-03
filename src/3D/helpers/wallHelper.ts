@@ -185,12 +185,15 @@ export const getColinearChain = (rooms: Room[], points: THREE.Vector3[], active:
   return orderedChain;
 };
 
-export const isOpenEndpoint = (pointIdx: number, rooms: Room[], points: THREE.Vector3[]): boolean => {
-  let degree = 0;
-  rooms.forEach((room) => {
-    room.forEach((idx, i) => {
-      if (idx === pointIdx) degree++; // Count occurrences in loop
-    });
-  });
-  return degree === 1; // Open if exactly one connection (degree 1)
+export const getRoomOpenEnds = (rooms: Room[], pointIdx: number): { roomIdx: number; otherEnd: number | null } | null => {
+  for (let rIdx = 0; rIdx < rooms.length; rIdx++) {
+    const room = rooms[rIdx];
+    if (room.includes(pointIdx) && room[0] !== room[room.length - 1]) { // Open room
+      const ends = [room[0], room[room.length - 1]];
+      const otherEnd = ends.find(end => end !== pointIdx);
+      if (otherEnd !== undefined) return { roomIdx: rIdx, otherEnd };
+    }
+  }
+  return null;
 };
+

@@ -8,7 +8,7 @@ import { isDrawingAtom, previewPointAtom, snapCuesAtom } from '@/utils/atoms/dra
 import { pointsAtom, roomsAtom } from '@/utils/atoms/drawing';
 
 import { Children } from '@/utils/definitions';
-import { isOpenEndpoint, snapToPoints, straighten } from '@/3D/helpers/wallHelper';
+import { getRoomOpenEnds, snapToPoints, straighten } from '@/3D/helpers/wallHelper';
 import { CameraTypes, CursorTypes, SNAP_DISTANCE, SNAP_TOLERANCE, STRAIGHT_THRESHOLD } from '@/utils/constants';
 
 import Wall from '@/3D/dashboard/components/Wall';
@@ -242,38 +242,44 @@ export const AddInterface = ({ children }: Children) => {
       setRooms((prev) => [...prev, roomToAdd]);
       setCurrentLoop([]);
       setIsDrawing(false);
-    } else if (
-      snapResult.snappedPointIdx !== undefined ||
-      (snapResult.snappedWall && snapResult.snappedPointIdx === undefined)
-    ) {
-      // NEW: Check if snapped to open endpoint—extend existing room instead of new
-      if (snapResult.snappedPointIdx !== undefined && isOpenEndpoint(newIdx, rooms, points)) {
-        // Extend the room that has this open endpoint
-        const targetRoomIdx = rooms.findIndex((room) => room.includes(newIdx) && room.length >= 2);
-        if (targetRoomIdx !== -1) {
-          const targetRoom = [...rooms[targetRoomIdx]];
-          const connectionIdx = targetRoom.findIndex((idx) => idx === newIdx);
-          if (connectionIdx !== -1) {
-            // Append to end if it's the last point, or insert if mid (but for open, assume end)
-            if (connectionIdx === targetRoom.length - 1) {
-              targetRoom.push(newIdx); // Extend end
-            } else {
-              targetRoom.splice(connectionIdx + 1, 0, newIdx); // Insert after
+    } else if (snapResult.snappedPointIdx !== undefined || shiftPressed) {
+      // Check if this closes a gap in the same room (both ends are open ends of same room)
+      const startOpenInfo = getRoomOpenEnds(rooms, firstIdx);
+      const snappedOpenInfo = getRoomOpenEnds(rooms, newIdx);
+      if (
+        startOpenInfo &&
+        snappedOpenInfo &&
+        startOpenInfo.roomIdx === snappedOpenInfo.roomIdx &&
+        startOpenInfo.otherEnd === newIdx &&
+        snappedOpenInfo.otherEnd === firstIdx
+      ) {
+        // Close the gap: Insert the segment between the two open ends in the room
+        const targetRoomIdx = startOpenInfo.roomIdx;
+        setRooms((prev) => {
+          const updated = [...prev];
+          const targetRoom = [...updated[targetRoomIdx]];
+          const startConnectionIdx = targetRoom.findIndex((idx) => idx === firstIdx);
+          const snappedConnectionIdx = targetRoom.findIndex((idx) => idx === newIdx);
+          // Assume start is earlier in array (adjust if needed)
+          if (startConnectionIdx < snappedConnectionIdx) {
+            // Insert newIdx after start (but since it's closing, move snapped to after start? Wait, for U [0,1,2,3], start at 3 (end), snap to 0 (start), but to close, append 0 to end? No— for gap close, splice snapped after start if not.
+            // Better: Since it's open, and ends are 0 and 3, to close, push the missing segment, but since currentLoop is the segment, push the snapped (0) to end if current start is 3.
+            if (startConnectionIdx === targetRoom.length - 1) {
+              targetRoom.push(newIdx); // Extend end with snapped
+            } else if (snappedConnectionIdx === 0) {
+              targetRoom.unshift(firstIdx); // Extend start, but rare
             }
-            setRooms((prev) => {
-              const updated = [...prev];
-              updated[targetRoomIdx] = targetRoom;
-              return updated;
-            });
           }
-          setCurrentLoop([]);
-          setIsDrawing(false);
-          setPreviewPoint(null);
-          return;
-        }
+          updated[targetRoomIdx] = targetRoom;
+          return updated;
+        });
+        setCurrentLoop([]);
+        setIsDrawing(false);
+        setPreviewPoint(null);
+        return;
       }
 
-      // Fallback: Create new room as before
+      // Fallback extend or new room as before
       const roomToAdd = [...currentLoop, newIdx];
       setRooms((prev) => [...prev, roomToAdd]);
       setCurrentLoop([]);

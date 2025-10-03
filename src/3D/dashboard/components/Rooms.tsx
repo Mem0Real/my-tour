@@ -9,6 +9,7 @@ import Wall from '@/3D/dashboard/components/Wall';
 import LengthOverlay from '@/3D/dashboard/components/LengthOverlay';
 
 import { cameraTypeAtom, rulerAtom } from '@/utils/atoms/ui';
+import { Floor } from '@/3D/dashboard/components/Floor';
 
 export const Rooms = () => {
   const points = useAtomValue(pointsAtom);
@@ -27,6 +28,8 @@ export const Rooms = () => {
 
         return (
           <group key={`room-${roomIndex}`}>
+            <Floor roomIndex={roomIndex} />
+
             {Array.from({ length: numSegments }).map((_, wIdx) => {
               const startIdx = room[wIdx];
               const endIdx = room[(wIdx + 1) % len]; // Safe for closed (wraps to 0 correctly)

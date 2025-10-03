@@ -4,8 +4,9 @@ import { getMiterOffset } from '@/3D/helpers/wallHelper';
 import { WallProps } from '@/utils/definitions';
 import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
 import { useAtomValue } from 'jotai';
-import { menuVisibleAtom, wallHeightAtom, wallThicknessAtom } from '@/utils/atoms/ui';
+import { cameraTypeAtom, menuVisibleAtom, wallHeightAtom, wallThicknessAtom } from '@/utils/atoms/ui';
 import { Menu } from '@/app/dashboard/components/Menu';
+import { CameraTypes } from '@/utils/constants';
 
 const Wall: FC<WallProps> = React.memo(
   ({ start, end, color = 'white', prevDir = null, nextDir = null, roomIndex, id }) => {
@@ -14,6 +15,7 @@ const Wall: FC<WallProps> = React.memo(
     const thickness = useAtomValue(wallThicknessAtom);
     const height = useAtomValue(wallHeightAtom);
     const menuVisible = useAtomValue(menuVisibleAtom);
+    const cameraType = useAtomValue(cameraTypeAtom)
 
     const wallDir = new THREE.Vector3().subVectors(end, start).setY(0).normalize();
 
@@ -65,7 +67,7 @@ const Wall: FC<WallProps> = React.memo(
           <boxGeometry args={[length, height, thickness * 2]} />
           <meshStandardMaterial color={color} opacity={1} transparent />
         </mesh>
-        {menuVisible !== null && <Menu />}
+        {menuVisible !== null && cameraType === CameraTypes.ORTHOGRAPHIC && <Menu />}
       </group>
     );
   }
