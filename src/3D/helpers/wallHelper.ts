@@ -184,3 +184,13 @@ export const getColinearChain = (rooms: Room[], points: THREE.Vector3[], active:
 
   return orderedChain;
 };
+
+export const isOpenEndpoint = (pointIdx: number, rooms: Room[], points: THREE.Vector3[]): boolean => {
+  let degree = 0;
+  rooms.forEach((room) => {
+    room.forEach((idx, i) => {
+      if (idx === pointIdx) degree++; // Count occurrences in loop
+    });
+  });
+  return degree === 1; // Open if exactly one connection (degree 1)
+};

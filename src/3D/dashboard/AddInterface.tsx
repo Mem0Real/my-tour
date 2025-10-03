@@ -8,7 +8,7 @@ import { isDrawingAtom, previewPointAtom, snapCuesAtom } from '@/utils/atoms/dra
 import { pointsAtom, roomsAtom } from '@/utils/atoms/drawing';
 
 import { Children } from '@/utils/definitions';
-import { snapToPoints, straighten } from '@/3D/helpers/wallHelper';
+import { isOpenEndpoint, snapToPoints, straighten } from '@/3D/helpers/wallHelper';
 import { CameraTypes, CursorTypes, SNAP_DISTANCE, SNAP_TOLERANCE, STRAIGHT_THRESHOLD } from '@/utils/constants';
 
 import Wall from '@/3D/dashboard/components/Wall';
@@ -75,6 +75,97 @@ export const AddInterface = ({ children }: Children) => {
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, [currentLoop, isDrawing, handleKeyDown]);
+
+  // const handlePointerDown = (e: ThreeEvent<MouseEvent>) => {
+  //   if (!e || !e.point || e.button === 2) return;
+  //   if (cameraType !== CameraTypes.ORTHOGRAPHIC) return;
+
+  //   const clicked = e.point.clone();
+  //   clicked.y = 0;
+
+  //   const currentPositions = currentLoop.map((idx) => points[idx]);
+
+  //   const snapResult = snapToPoints(clicked, currentPositions, points, rooms, SNAP_TOLERANCE);
+
+  //   const snappedPoint = snapResult.snappedPoint;
+
+  //   if (!isDrawing) {
+  //     const newIdx = snapResult.snappedPointIdx ?? points.length;
+  //     if (snapResult.snappedPointIdx === undefined) {
+  //       setPoints((prev) => [...prev, snappedPoint.clone()]);
+  //     }
+
+  //     if (
+  //       snapResult.snappedRoomIdx !== undefined &&
+  //       snapResult.snappedWallIdx !== undefined &&
+  //       snapResult.snappedPointIdx === undefined
+  //     ) {
+  //       const newRooms = [...rooms];
+  //       const targetRoom = [...newRooms[snapResult.snappedRoomIdx]];
+  //       targetRoom.splice(snapResult.snappedWallIdx + 1, 0, newIdx);
+  //       newRooms[snapResult.snappedRoomIdx] = targetRoom;
+  //       setRooms(newRooms);
+  //     }
+
+  //     setCurrentLoop([newIdx]);
+  //     setIsDrawing(true);
+  //     setPreviewPoint(null);
+  //     return;
+  //   }
+
+  //   // For subsequent points
+  //   const firstIdx = currentLoop[0];
+  //   const lastIdx = currentLoop[currentLoop.length - 1];
+  //   const lastPoint = points[lastIdx];
+  //   const newPos = straighten(lastPoint, snappedPoint, STRAIGHT_THRESHOLD);
+  //   const firstPoint = points[firstIdx];
+
+  //   const isNearFirst = currentLoop.length > 2 && newPos.distanceTo(firstPoint) < SNAP_DISTANCE;
+
+  //   let newIdx: number;
+  //   if (isNearFirst) {
+  //     newIdx = firstIdx;
+  //   } else if (snapResult.snappedPointIdx !== undefined) {
+  //     newIdx = snapResult.snappedPointIdx;
+  //   } else {
+  //     newIdx = points.length;
+  //     setPoints((prev) => [...prev, newPos.clone()]);
+  //   }
+
+  //   if (
+  //     snapResult.snappedRoomIdx !== undefined &&
+  //     snapResult.snappedWallIdx !== undefined &&
+  //     snapResult.snappedPointIdx === undefined &&
+  //     !isNearFirst
+  //   ) {
+  //     // Split only if not closing
+  //     const newRooms = [...rooms];
+  //     const targetRoom = [...newRooms[snapResult.snappedRoomIdx]];
+  //     targetRoom.splice(snapResult.snappedWallIdx + 1, 0, newIdx);
+  //     newRooms[snapResult.snappedRoomIdx] = targetRoom;
+  //     setRooms(newRooms);
+  //   }
+
+  //   if (isNearFirst) {
+  //     const roomToAdd = [...currentLoop, firstIdx];
+  //     setRooms((prev) => [...prev, roomToAdd]);
+  //     setCurrentLoop([]);
+  //     setIsDrawing(false);
+  //   } else if (
+  //     snapResult.snappedPointIdx !== undefined ||
+  //     (snapResult.snappedWall && snapResult.snappedPointIdx === undefined) ||
+  //     shiftPressed
+  //   ) {
+  //     const roomToAdd = [...currentLoop, newIdx];
+  //     setRooms((prev) => [...prev, roomToAdd]);
+  //     setCurrentLoop([]);
+  //     setIsDrawing(false);
+  //   } else {
+  //     setCurrentLoop([...currentLoop, newIdx]);
+  //   }
+
+  //   setPreviewPoint(null);
+  // };
 
   const handlePointerDown = (e: ThreeEvent<MouseEvent>) => {
     if (!e || !e.point || e.button === 2) return;
@@ -151,7 +242,38 @@ export const AddInterface = ({ children }: Children) => {
       setRooms((prev) => [...prev, roomToAdd]);
       setCurrentLoop([]);
       setIsDrawing(false);
-    } else if ((snapResult.snappedWall && snapResult.snappedPointIdx === undefined) || shiftPressed) {
+    } else if (
+      snapResult.snappedPointIdx !== undefined ||
+      (snapResult.snappedWall && snapResult.snappedPointIdx === undefined)
+    ) {
+      // NEW: Check if snapped to open endpoint—extend existing room instead of new
+      if (snapResult.snappedPointIdx !== undefined && isOpenEndpoint(newIdx, rooms, points)) {
+        // Extend the room that has this open endpoint
+        const targetRoomIdx = rooms.findIndex((room) => room.includes(newIdx) && room.length >= 2);
+        if (targetRoomIdx !== -1) {
+          const targetRoom = [...rooms[targetRoomIdx]];
+          const connectionIdx = targetRoom.findIndex((idx) => idx === newIdx);
+          if (connectionIdx !== -1) {
+            // Append to end if it's the last point, or insert if mid (but for open, assume end)
+            if (connectionIdx === targetRoom.length - 1) {
+              targetRoom.push(newIdx); // Extend end
+            } else {
+              targetRoom.splice(connectionIdx + 1, 0, newIdx); // Insert after
+            }
+            setRooms((prev) => {
+              const updated = [...prev];
+              updated[targetRoomIdx] = targetRoom;
+              return updated;
+            });
+          }
+          setCurrentLoop([]);
+          setIsDrawing(false);
+          setPreviewPoint(null);
+          return;
+        }
+      }
+
+      // Fallback: Create new room as before
       const roomToAdd = [...currentLoop, newIdx];
       setRooms((prev) => [...prev, roomToAdd]);
       setCurrentLoop([]);
