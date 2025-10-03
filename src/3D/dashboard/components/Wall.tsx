@@ -57,6 +57,7 @@ const Wall: FC<WallProps> = React.memo(
           onPointerOut={handlers.handlePointerOut}
           onContextMenu={(e) => {
             if (handlers.handleRightClick) {
+              console.log(`WallIdx: ${id}, roomIndex: ${roomIndex}`);
               handlers.handleRightClick(e, { wallIndex: id!, roomIndex: roomIndex! });
             }
           }}

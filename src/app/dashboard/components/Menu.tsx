@@ -9,7 +9,6 @@ export const Menu = () => {
   const [activeMenu, setActiveMenu] = useAtom(menuVisibleAtom);
 
   const [rooms, setRooms] = useAtom(roomsAtom);
-
   const handleDelete = () => {
     const wallData = activeMenu?.wallData;
     if (!wallData) return;
@@ -24,38 +23,15 @@ export const Menu = () => {
     const updatedRooms = [...rooms];
     const targetRoom = updatedRooms[roomIdx];
 
-    // if (!targetRoom || targetRoom.length < 4) return; // Need at least 4 for closed to split meaningfully
-
     const roomLength = targetRoom.length;
-    const wasClosed = targetRoom[0] === targetRoom[roomLength - 1];
 
-    // Start of deleted segment
-    const segmentStartIdx = wallIdx;
-    const segmentEndIdx = (wallIdx + 1) % (wasClosed ? roomLength - 1 : roomLength);
+    const adjustedWallIdx = wallIdx % roomLength;
 
-    // Split into two open rooms: before segment and after segment
-    let beforeSegment: number[] = [];
-    let afterSegment: number[] = [];
+    // Split into before (0 to adjustedWallIdx +1) and after ((adjustedWallIdx +1) to end)
+    const beforeSegment = targetRoom.slice(0, adjustedWallIdx + 1);
+    const afterSegment = targetRoom.slice(adjustedWallIdx + 1);
 
-    if (wasClosed) {
-      // Handle wrap: from 0 to segmentStart, and segmentEnd to end (excluding duplicate)
-      const effectiveLen = roomLength - 1;
-      if (segmentStartIdx > 0) {
-        beforeSegment = targetRoom.slice(0, segmentStartIdx + 1); // Include start
-      } else {
-        // If deleting first segment, before is empty
-      }
-
-      const afterStart = (segmentEndIdx + effectiveLen) % effectiveLen; // Wrap if needed
-      afterSegment = targetRoom.slice(segmentEndIdx, effectiveLen).concat(targetRoom.slice(0, afterStart + 1));
-      if (afterStart === 0) afterSegment = targetRoom.slice(segmentEndIdx, effectiveLen); // Adjust if wrap not needed
-    } else {
-      // Open room: simpler slice
-      beforeSegment = targetRoom.slice(0, segmentStartIdx + 1);
-      afterSegment = targetRoom.slice(segmentEndIdx);
-    }
-
-    // Filter degenerates (< 2 points)
+    // Add to new rooms, filter degenerates (<2 points)
     const newRooms = updatedRooms.filter((_, i) => i !== roomIdx);
     if (beforeSegment.length >= 2) newRooms.push(beforeSegment);
     if (afterSegment.length >= 2) newRooms.push(afterSegment);
