@@ -25,6 +25,13 @@ export const Menu = () => {
 
     const roomLength = targetRoom.length;
 
+    if (!roomLength) {
+      const newRooms = updatedRooms.filter((_, i) => i !== roomIdx);
+      setRooms(newRooms);
+      setActiveMenu(null); // Hide menu after action
+      return;
+    }
+
     const adjustedWallIdx = wallIdx % roomLength;
 
     // Split into before (0 to adjustedWallIdx +1) and after ((adjustedWallIdx +1) to end)

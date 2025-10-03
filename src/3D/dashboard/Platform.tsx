@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-import { useAtomValue } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { snapCuesAtom } from '@/utils/atoms/drawing';
 
 import { SnapCues } from '@/3D/dashboard/components/SnapCues';
 import { useToolInput } from '@/3D/dashboard/components/ToolInputContext';
 import { Rooms } from '@/3D/dashboard/components/Rooms';
-import { activeToolAtom } from '@/utils/atoms/ui';
+import { activeToolAtom, menuVisibleAtom } from '@/utils/atoms/ui';
 import { ThreeEvent } from '@react-three/fiber';
 
 export const Platform = () => {
   const snapCues = useAtomValue(snapCuesAtom);
   const activeTool = useAtomValue(activeToolAtom);
+  const [menuVisible, setMenuVisible] = useAtom(menuVisibleAtom);
 
   const { onPointerDown, onPointerMove, onPointerUp, onRightClick, handlePointerUp, handlePointerMove } =
     useToolInput();
@@ -27,6 +28,15 @@ export const Platform = () => {
         break;
     }
   };
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setMenuVisible(null);
+    };
+
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
 
   return (
     <>
